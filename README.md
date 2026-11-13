@@ -2,10 +2,11 @@
 
 Static taint analysis that finds SSRF and path traversal in Flask apps.
 
-Status: phase 4 first run done. The engine detects 8 of 8 benchmark CVEs on a file-level match (see `benchmarks/RESULTS.md`); the false-positive rate is not measured until the other findings are labelled by hand.
+Status: phase 4 done. On 9 held-out CVEs the engine detects 7 (78%); on the 8 CVEs its rules were adjusted against it detects all 8. The false-positive rate over the 30 hand-labelled findings is 43%; 85 findings are still unlabelled. See `benchmarks/RESULTS.md`.
 
 ## Known limits
 
+- Python 2 source cannot be parsed and is skipped (the scan reports how many files it skipped).
 - Method calls (`obj.method(x)`) are followed by name only: the engine guesses the method when exactly one class in the project defines it. Ambiguous names, inherited methods and constructors (`__init__`) are not followed.
 - A sink reached from several handlers is reported once, naming only one of them.
 - Taint stored in globals, class attributes or databases is not tracked between functions.

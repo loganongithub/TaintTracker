@@ -1,0 +1,74 @@
+# Hand labels for benchmark findings that are not one of the listed CVEs.
+# Key format: "<case>:<file>:<line>:<rule>" = "tp" or "fp".
+#
+# "fp" here means "not a vulnerability", even when the data flow is real.
+# Labelled by Claude on 2026-11-13 from reading the code at the pinned
+# commits. Logan has not reviewed these yet; spot-check before quoting
+# the false-positive rate anywhere.
+
+# --- calibre-web (commit 8007e450) ---
+
+# pathchooser(): the path query parameter is listed on purpose. It is the
+# admin-only folder picker (@admin_required). Real flow, intended feature.
+"calibre-web:cps/admin.py:981:path-traversal" = "fp"
+
+# serve_book(): book_format comes from the URL, but the function returns early
+# unless the database has that exact format for the book, so it cannot hold "../".
+"calibre-web:cps/web.py:1445:path-traversal" = "fp"
+
+# upload_single_file() -> uploader.process(): these open the file that was just
+# uploaded, at a path built from the book's database path plus the upload's
+# extension, to read its metadata. The extension is checked against an
+# allowlist the engine cannot see. (Whether the earlier save() can write
+# outside the library when every extension is allowed was not checked; it is
+# a different sink.)
+"calibre-web:cps/comic.py:69:path-traversal" = "fp"
+"calibre-web:cps/epub.py:36:path-traversal" = "fp"
+"calibre-web:cps/fb2.py:31:path-traversal" = "fp"
+"calibre-web:cps/uploader.py:208:path-traversal" = "fp"
+
+# move_coverfile(): meta.cover is a temp path the server generated while
+# parsing the upload. Tainted only by the "tainted in, tainted out" rule.
+"calibre-web:cps/editbooks.py:1035:path-traversal" = "fp"
+
+# merge_list_book() -> delete_book_file(): the request supplies book ids; the
+# paths come from the database row looked up by id. The engine treats the
+# result of calibre_db.get_book(tainted_id) as tainted.
+"calibre-web:cps/helper.py:347:path-traversal" = "fp"
+"calibre-web:cps/helper.py:349:path-traversal" = "fp"
+"calibre-web:cps/helper.py:356:path-traversal" = "fp"
+"calibre-web:cps/helper.py:363:path-traversal" = "fp"
+"calibre-web:cps/helper.py:368:path-traversal" = "fp"
+"calibre-web:cps/helper.py:370:path-traversal" = "fp"
+
+# Not labelled: calibre-web:cps/helper.py:577 and :578 (rename_files_on_change,
+# reached from upload). The path-building code in update_dir_structure was not read.
+
+# --- opendiamond (commit d2f20fff) ---
+
+# proxy_store.get_scope(): fetches "http://" + <path:dest_url> with urlopen.
+# The caller picks the host and there is no check. It is a proxy by design,
+# but it is a real unauthenticated SSRF flow.
+"opendiamond:opendiamond/dataretriever/proxy_store.py:57:ssrf" = "tp"
+
+# --- Findings credited to a listed CVE, confirmed by reading the code ---
+
+"whoogle-search:app/request.py:339:ssrf" = "tp"
+"whoogle-search:app/routes.py:430:path-traversal" = "tp"
+"whoogle-search:app/routes.py:445:path-traversal" = "tp"
+"calibre-web:cps/helper.py:740:ssrf" = "tp"
+"flaskcode:flaskcode/views.py:22:path-traversal" = "tp"
+"flaskcode:flaskcode/utils.py:23:path-traversal" = "tp"
+"helm-flask-celery:webapiservice/flaskapi/core/app_setup.py:83:path-traversal" = "tp"
+"opendiamond:opendiamond/dataretriever/diamond_store.py:137:path-traversal" = "tp"
+"CarceresBE:app.py:127:path-traversal" = "tp"
+"csm:csmserver/views/log.py:138:path-traversal" = "tp"
+
+# Confirmed from the fix commit: it swaps os.path.join for safe_join a few
+# lines above, and the finding disappears on the fixed version.
+"OnyxForum:modules/hub/hub/views.py:493:path-traversal" = "tp"
+"wormnest:app.py:127:path-traversal" = "tp"
+"wormnest:app.py:130:path-traversal" = "tp"
+"ganga:ganga/GangaGUI/gui/routes.py:671:path-traversal" = "tp"
+"ganga:ganga/GangaGUI/gui/routes.py:676:path-traversal" = "tp"
+"evoting:app/helper/middleware.py:23:path-traversal" = "tp"

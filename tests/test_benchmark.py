@@ -77,7 +77,10 @@ fix = "{fix}"
 """,
         encoding="utf-8",
     )
-    (bench / "labels.toml").write_text('"demo:other.py:6:ssrf" = "fp"\n', encoding="utf-8")
+    (bench / "labels.toml").write_text(
+        '"demo:other.py:6:ssrf" = "fp"\n"demo:app.py:8:path-traversal" = "tp"\n',
+        encoding="utf-8",
+    )
 
     summary = benchmark.run(bench)
 

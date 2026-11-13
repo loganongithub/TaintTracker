@@ -84,3 +84,116 @@ fix = "28c985d712d7ac26893433e8035e2e3678fcae9f"
   id = "CVE-2022-31549"
   rule = "path-traversal"
   note = "unsafe use of Flask send_file"
+
+# ---------------------------------------------------------------------
+# Held-out set. Added on 2026-11-13 after the engine was adjusted against
+# the cases above. Do not change engine rules to make these pass without
+# recording it in DECISIONS.md: their value is that the engine has never
+# been tuned on them.
+#
+# All are from the CVE-2022-315xx batch (unsafe Flask send_file).
+# Cases with only `vulnerable` were never fixed upstream according to OSV;
+# they are pinned at the head commit as of 2026-11-13, and nobody has
+# confirmed the bug is still present at that commit. Their `files` were
+# filled in after the first held-out run, by reading where each repository
+# calls send_file. That first run used a repository-level match and wrongly
+# credited dls, whose vulnerable file is Python 2 and was skipped.
+# ---------------------------------------------------------------------
+
+[[case]]
+id = "OnyxForum"
+set = "heldout"
+repo = "https://github.com/ChaoticOnyx/OnyxForum"
+fix = "f25543dfc62a9694d7e4f67eebfa45e3de916053"
+
+  [[case.cve]]
+  id = "CVE-2022-31501"
+  rule = "path-traversal"
+
+[[case]]
+id = "wormnest"
+set = "heldout"
+repo = "https://github.com/operatorequals/wormnest"
+fix = "2dfe96fc2570586ac487b399ac20d41b3c114861"
+
+  [[case.cve]]
+  id = "CVE-2022-31502"
+  rule = "path-traversal"
+
+[[case]]
+id = "orchest"
+set = "heldout"
+repo = "https://github.com/orchest/orchest"
+fix = "5a46d528148fa12e767fc4d906fb5725fb4eea14"
+
+  [[case.cve]]
+  id = "CVE-2022-31503"
+  rule = "path-traversal"
+
+[[case]]
+id = "ganga"
+set = "heldout"
+repo = "https://github.com/ganga-devs/ganga"
+fix = "730e7aba192407d35eb37dd7938d49071124be8c"
+
+  [[case.cve]]
+  id = "CVE-2022-31507"
+  rule = "path-traversal"
+
+[[case]]
+id = "evoting"
+set = "heldout"
+repo = "https://github.com/idayrus/evoting"
+fix = "241d92a4d68f524365a6322b5bbcfaa7d9abc8a3"
+
+  [[case.cve]]
+  id = "CVE-2022-31508"
+  rule = "path-traversal"
+
+[[case]]
+id = "CarceresBE"
+set = "heldout"
+repo = "https://github.com/Delor4/CarceresBE"
+vulnerable = "ecc043c3bd9544628a6fa7b44d0018720268542f"
+
+  [[case.cve]]
+  id = "CVE-2022-31513"
+  rule = "path-traversal"
+  note = "route_frontend() joins <path:path> into a send_file path"
+  files = ["app.py"]
+
+[[case]]
+id = "dls"
+set = "heldout"
+repo = "https://github.com/summalabs/dls"
+vulnerable = "2adba47430b456ad0f324e4c8883a896a23b3fbf"
+
+  [[case.cve]]
+  id = "CVE-2022-31523"
+  rule = "path-traversal"
+  note = "send_file(REPOSITORY_BASE_PATH + path); the file is Python 2 and cannot be parsed"
+  files = ["app/backend/file_manager/api.py"]
+
+[[case]]
+id = "csm"
+set = "heldout"
+repo = "https://github.com/csm-aut/csm"
+vulnerable = "b38843a6cdc19a406e6f709c53767bdaaa2fef96"
+
+  [[case.cve]]
+  id = "CVE-2022-31530"
+  rule = "path-traversal"
+  note = "download_session_log() appends the file_path parameter to the log directory"
+  files = ["csmserver/views/log.py"]
+
+[[case]]
+id = "SetupBox"
+set = "heldout"
+repo = "https://github.com/maxtortime/SetupBox"
+vulnerable = "f91b0c65289a0c5d4b499ccc17997455f9cc3e89"
+
+  [[case.cve]]
+  id = "CVE-2022-31543"
+  rule = "path-traversal"
+  note = "explorer() joins <path:path> into a send_file path; the file is Python 2 and cannot be parsed"
+  files = ["web_server/runserver.py"]
