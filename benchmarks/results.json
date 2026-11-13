@@ -1,0 +1,794 @@
+{
+  "summary": {
+    "cves": 8,
+    "detected": 8,
+    "detected_with_fix": 6,
+    "cleared_by_fix": 2,
+    "other_findings": 18,
+    "unlabelled": 18,
+    "true_positives": 18,
+    "false_positives": 0,
+    "false_positive_rate": null
+  },
+  "cases": [
+    {
+      "id": "whoogle-search",
+      "repo": "https://github.com/benbusby/whoogle-search",
+      "vulnerable": {
+        "commit": "8830615abcf17e0cd3991fbf963debfb161784cd",
+        "files": 25,
+        "skipped": 0,
+        "findings": [
+          {
+            "rule": "ssrf",
+            "file": "app/request.py",
+            "line": 339,
+            "message": "untrusted input reaches requests.get() argument 'url', passed in by app.routes.element (/app/routes.py:479)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "app/routes.py",
+            "line": 430,
+            "message": "untrusted input reaches open() argument 'file'"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "app/routes.py",
+            "line": 445,
+            "message": "untrusted input reaches open() argument 'file'"
+          }
+        ]
+      },
+      "fixed": {
+        "commit": "3a2e0b262e4a076a20416b45e6b6f23fd265aeda",
+        "files": 25,
+        "skipped": 0,
+        "findings": [
+          {
+            "rule": "ssrf",
+            "file": "app/request.py",
+            "line": 339,
+            "message": "untrusted input reaches requests.get() argument 'url', passed in by app.routes.element (/app/routes.py:493)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "app/routes.py",
+            "line": 437,
+            "message": "untrusted input reaches open() argument 'file'"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "app/routes.py",
+            "line": 452,
+            "message": "untrusted input reaches open() argument 'file'"
+          }
+        ]
+      },
+      "cves": [
+        {
+          "id": "CVE-2024-22203",
+          "rule": "ssrf",
+          "files": [
+            "app/routes.py",
+            "app/request.py"
+          ],
+          "detected": true,
+          "hits": [
+            {
+              "rule": "ssrf",
+              "file": "app/request.py",
+              "line": 339,
+              "message": "untrusted input reaches requests.get() argument 'url', passed in by app.routes.element (/app/routes.py:479)"
+            }
+          ],
+          "cleared": false
+        },
+        {
+          "id": "CVE-2024-22205",
+          "rule": "ssrf",
+          "files": [
+            "app/routes.py",
+            "app/request.py"
+          ],
+          "detected": true,
+          "hits": [
+            {
+              "rule": "ssrf",
+              "file": "app/request.py",
+              "line": 339,
+              "message": "untrusted input reaches requests.get() argument 'url', passed in by app.routes.element (/app/routes.py:479)"
+            }
+          ],
+          "cleared": false
+        },
+        {
+          "id": "CVE-2024-22204",
+          "rule": "path-traversal",
+          "files": [
+            "app/routes.py"
+          ],
+          "detected": true,
+          "hits": [
+            {
+              "rule": "path-traversal",
+              "file": "app/routes.py",
+              "line": 430,
+              "message": "untrusted input reaches open() argument 'file'"
+            },
+            {
+              "rule": "path-traversal",
+              "file": "app/routes.py",
+              "line": 445,
+              "message": "untrusted input reaches open() argument 'file'"
+            }
+          ],
+          "cleared": false
+        }
+      ],
+      "other_findings": []
+    },
+    {
+      "id": "calibre-web",
+      "repo": "https://github.com/janeczku/calibre-web",
+      "vulnerable": {
+        "commit": "8007e450b3178f517b83b0989744c6df38867932",
+        "files": 61,
+        "skipped": 0,
+        "findings": [
+          {
+            "rule": "path-traversal",
+            "file": "cps/admin.py",
+            "line": 981,
+            "message": "untrusted input reaches os.listdir() argument 'path'"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/comic.py",
+            "line": 69,
+            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/editbooks.py",
+            "line": 1035,
+            "message": "untrusted input reaches os.unlink() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1084)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/epub.py",
+            "line": 36,
+            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/fb2.py",
+            "line": 31,
+            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 347,
+            "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 349,
+            "message": "untrusted input reaches os.remove() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 356,
+            "message": "untrusted input reaches os.unlink() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 363,
+            "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 368,
+            "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 370,
+            "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 577,
+            "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 578,
+            "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)"
+          },
+          {
+            "rule": "ssrf",
+            "file": "cps/helper.py",
+            "line": 740,
+            "message": "untrusted input reaches requests.get() argument 'url', passed in by cps.editbooks.edit_book (/cps/editbooks.py:808)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/uploader.py",
+            "line": 208,
+            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/web.py",
+            "line": 1445,
+            "message": "untrusted input reaches open() argument 'file'"
+          }
+        ]
+      },
+      "fixed": {
+        "commit": "965352c8d96c9eae7a6867ff76b0db137d04b0b8",
+        "files": 61,
+        "skipped": 0,
+        "findings": [
+          {
+            "rule": "path-traversal",
+            "file": "cps/admin.py",
+            "line": 981,
+            "message": "untrusted input reaches os.listdir() argument 'path'"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/comic.py",
+            "line": 69,
+            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/editbooks.py",
+            "line": 1035,
+            "message": "untrusted input reaches os.unlink() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1084)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/epub.py",
+            "line": 36,
+            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/fb2.py",
+            "line": 31,
+            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 347,
+            "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 349,
+            "message": "untrusted input reaches os.remove() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 356,
+            "message": "untrusted input reaches os.unlink() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 363,
+            "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 368,
+            "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 370,
+            "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 577,
+            "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/helper.py",
+            "line": 578,
+            "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)"
+          },
+          {
+            "rule": "ssrf",
+            "file": "cps/helper.py",
+            "line": 740,
+            "message": "untrusted input reaches requests.get() argument 'url', passed in by cps.editbooks.edit_book (/cps/editbooks.py:808)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/uploader.py",
+            "line": 208,
+            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/web.py",
+            "line": 1445,
+            "message": "untrusted input reaches open() argument 'file'"
+          }
+        ]
+      },
+      "cves": [
+        {
+          "id": "CVE-2022-0766",
+          "rule": "ssrf",
+          "files": [
+            "cps/helper.py"
+          ],
+          "detected": true,
+          "hits": [
+            {
+              "rule": "ssrf",
+              "file": "cps/helper.py",
+              "line": 740,
+              "message": "untrusted input reaches requests.get() argument 'url', passed in by cps.editbooks.edit_book (/cps/editbooks.py:808)"
+            }
+          ],
+          "cleared": false
+        }
+      ],
+      "other_findings": [
+        {
+          "rule": "path-traversal",
+          "file": "cps/admin.py",
+          "line": 981,
+          "message": "untrusted input reaches os.listdir() argument 'path'",
+          "key": "calibre-web:cps/admin.py:981:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/comic.py",
+          "line": 69,
+          "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+          "key": "calibre-web:cps/comic.py:69:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/editbooks.py",
+          "line": 1035,
+          "message": "untrusted input reaches os.unlink() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1084)",
+          "key": "calibre-web:cps/editbooks.py:1035:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/epub.py",
+          "line": 36,
+          "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+          "key": "calibre-web:cps/epub.py:36:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/fb2.py",
+          "line": 31,
+          "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+          "key": "calibre-web:cps/fb2.py:31:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/helper.py",
+          "line": 347,
+          "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
+          "key": "calibre-web:cps/helper.py:347:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/helper.py",
+          "line": 349,
+          "message": "untrusted input reaches os.remove() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
+          "key": "calibre-web:cps/helper.py:349:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/helper.py",
+          "line": 356,
+          "message": "untrusted input reaches os.unlink() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
+          "key": "calibre-web:cps/helper.py:356:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/helper.py",
+          "line": 363,
+          "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
+          "key": "calibre-web:cps/helper.py:363:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/helper.py",
+          "line": 368,
+          "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
+          "key": "calibre-web:cps/helper.py:368:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/helper.py",
+          "line": 370,
+          "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
+          "key": "calibre-web:cps/helper.py:370:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/helper.py",
+          "line": 577,
+          "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+          "key": "calibre-web:cps/helper.py:577:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/helper.py",
+          "line": 578,
+          "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+          "key": "calibre-web:cps/helper.py:578:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/uploader.py",
+          "line": 208,
+          "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+          "key": "calibre-web:cps/uploader.py:208:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/web.py",
+          "line": 1445,
+          "message": "untrusted input reaches open() argument 'file'",
+          "key": "calibre-web:cps/web.py:1445:path-traversal",
+          "label": "unlabelled"
+        }
+      ]
+    },
+    {
+      "id": "flaskcode",
+      "repo": "https://github.com/sujeetkv/flaskcode",
+      "vulnerable": {
+        "commit": "05a9d61c482f35d13480ba5337ef2ffe6072cae5",
+        "files": 11,
+        "skipped": 0,
+        "findings": [
+          {
+            "rule": "path-traversal",
+            "file": "flaskcode/utils.py",
+            "line": 23,
+            "message": "untrusted input reaches io.open() argument 'file', passed in by flaskcode.views.update_resource_data (/flaskcode/views.py:44)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "flaskcode/views.py",
+            "line": 22,
+            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'"
+          }
+        ]
+      },
+      "fixed": null,
+      "cves": [
+        {
+          "id": "CVE-2023-52288",
+          "rule": "path-traversal",
+          "files": [
+            "flaskcode/views.py",
+            "flaskcode/utils.py"
+          ],
+          "detected": true,
+          "hits": [
+            {
+              "rule": "path-traversal",
+              "file": "flaskcode/utils.py",
+              "line": 23,
+              "message": "untrusted input reaches io.open() argument 'file', passed in by flaskcode.views.update_resource_data (/flaskcode/views.py:44)"
+            },
+            {
+              "rule": "path-traversal",
+              "file": "flaskcode/views.py",
+              "line": 22,
+              "message": "untrusted input reaches flask.send_file() argument 'path_or_file'"
+            }
+          ],
+          "cleared": null
+        },
+        {
+          "id": "CVE-2023-52289",
+          "rule": "path-traversal",
+          "files": [
+            "flaskcode/views.py",
+            "flaskcode/utils.py"
+          ],
+          "detected": true,
+          "hits": [
+            {
+              "rule": "path-traversal",
+              "file": "flaskcode/utils.py",
+              "line": 23,
+              "message": "untrusted input reaches io.open() argument 'file', passed in by flaskcode.views.update_resource_data (/flaskcode/views.py:44)"
+            },
+            {
+              "rule": "path-traversal",
+              "file": "flaskcode/views.py",
+              "line": 22,
+              "message": "untrusted input reaches flask.send_file() argument 'path_or_file'"
+            }
+          ],
+          "cleared": null
+        }
+      ],
+      "other_findings": []
+    },
+    {
+      "id": "opendiamond",
+      "repo": "https://github.com/cmusatyalab/opendiamond",
+      "vulnerable": {
+        "commit": "d2f20ffff793f88335f2c0244679d7193295abe2",
+        "files": 100,
+        "skipped": 0,
+        "findings": [
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/diamond_store.py",
+            "line": 137,
+            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/mixer_store.py",
+            "line": 83,
+            "message": "untrusted input reaches open() argument 'file'"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/mixer_store.py",
+            "line": 203,
+            "message": "untrusted input reaches open() argument 'file', passed in by opendiamond.dataretriever.mixer_store.get_mixer_classes (/opendiamond/dataretriever/mixer_store.py:65)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/mixer_store.py",
+            "line": 266,
+            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'"
+          },
+          {
+            "rule": "ssrf",
+            "file": "opendiamond/dataretriever/proxy_store.py",
+            "line": 57,
+            "message": "untrusted input reaches urllib.request.urlopen() argument 'url', passed in by opendiamond.dataretriever.proxy_store.get_scope (/opendiamond/dataretriever/proxy_store.py:49)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/test_store.py",
+            "line": 106,
+            "message": "untrusted input reaches open() argument 'file'"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/test_store.py",
+            "line": 233,
+            "message": "untrusted input reaches open() argument 'file', passed in by opendiamond.dataretriever.test_store.get_mixer_classes (/opendiamond/dataretriever/test_store.py:67)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/test_store.py",
+            "line": 296,
+            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/util.py",
+            "line": 82,
+            "message": "untrusted input reaches open() argument 'file', passed in by opendiamond.dataretriever.augment_store.get_scope (/opendiamond/dataretriever/augment_store.py:76)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/util.py",
+            "line": 94,
+            "message": "untrusted input reaches open() argument 'file', passed in by opendiamond.dataretriever.augment_store.get_scope (/opendiamond/dataretriever/augment_store.py:76)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/yfcc100m_mysql_store.py",
+            "line": 128,
+            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'"
+          }
+        ]
+      },
+      "fixed": {
+        "commit": "398049c187ee644beabab44d6fece82251c1ea56",
+        "files": 100,
+        "skipped": 0,
+        "findings": [
+          {
+            "rule": "ssrf",
+            "file": "opendiamond/dataretriever/proxy_store.py",
+            "line": 57,
+            "message": "untrusted input reaches urllib.request.urlopen() argument 'url', passed in by opendiamond.dataretriever.proxy_store.get_scope (/opendiamond/dataretriever/proxy_store.py:49)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/util.py",
+            "line": 82,
+            "message": "untrusted input reaches open() argument 'file', passed in by opendiamond.dataretriever.augment_store.get_scope (/opendiamond/dataretriever/augment_store.py:76)"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/util.py",
+            "line": 94,
+            "message": "untrusted input reaches open() argument 'file', passed in by opendiamond.dataretriever.augment_store.get_scope (/opendiamond/dataretriever/augment_store.py:76)"
+          }
+        ]
+      },
+      "cves": [
+        {
+          "id": "CVE-2022-31506",
+          "rule": "path-traversal",
+          "files": [
+            "opendiamond/dataretriever/augment_store.py",
+            "opendiamond/dataretriever/diamond_store.py",
+            "opendiamond/dataretriever/mixer_store.py",
+            "opendiamond/dataretriever/test_store.py",
+            "opendiamond/dataretriever/video_store.py",
+            "opendiamond/dataretriever/yfcc100m_mysql_store.py"
+          ],
+          "detected": true,
+          "hits": [
+            {
+              "rule": "path-traversal",
+              "file": "opendiamond/dataretriever/diamond_store.py",
+              "line": 137,
+              "message": "untrusted input reaches flask.send_file() argument 'path_or_file'"
+            },
+            {
+              "rule": "path-traversal",
+              "file": "opendiamond/dataretriever/mixer_store.py",
+              "line": 83,
+              "message": "untrusted input reaches open() argument 'file'"
+            },
+            {
+              "rule": "path-traversal",
+              "file": "opendiamond/dataretriever/mixer_store.py",
+              "line": 203,
+              "message": "untrusted input reaches open() argument 'file', passed in by opendiamond.dataretriever.mixer_store.get_mixer_classes (/opendiamond/dataretriever/mixer_store.py:65)"
+            },
+            {
+              "rule": "path-traversal",
+              "file": "opendiamond/dataretriever/mixer_store.py",
+              "line": 266,
+              "message": "untrusted input reaches flask.send_file() argument 'path_or_file'"
+            },
+            {
+              "rule": "path-traversal",
+              "file": "opendiamond/dataretriever/test_store.py",
+              "line": 106,
+              "message": "untrusted input reaches open() argument 'file'"
+            },
+            {
+              "rule": "path-traversal",
+              "file": "opendiamond/dataretriever/test_store.py",
+              "line": 233,
+              "message": "untrusted input reaches open() argument 'file', passed in by opendiamond.dataretriever.test_store.get_mixer_classes (/opendiamond/dataretriever/test_store.py:67)"
+            },
+            {
+              "rule": "path-traversal",
+              "file": "opendiamond/dataretriever/test_store.py",
+              "line": 296,
+              "message": "untrusted input reaches flask.send_file() argument 'path_or_file'"
+            },
+            {
+              "rule": "path-traversal",
+              "file": "opendiamond/dataretriever/yfcc100m_mysql_store.py",
+              "line": 128,
+              "message": "untrusted input reaches flask.send_file() argument 'path_or_file'"
+            }
+          ],
+          "cleared": true
+        }
+      ],
+      "other_findings": [
+        {
+          "rule": "ssrf",
+          "file": "opendiamond/dataretriever/proxy_store.py",
+          "line": 57,
+          "message": "untrusted input reaches urllib.request.urlopen() argument 'url', passed in by opendiamond.dataretriever.proxy_store.get_scope (/opendiamond/dataretriever/proxy_store.py:49)",
+          "key": "opendiamond:opendiamond/dataretriever/proxy_store.py:57:ssrf",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "opendiamond/dataretriever/util.py",
+          "line": 82,
+          "message": "untrusted input reaches open() argument 'file', passed in by opendiamond.dataretriever.augment_store.get_scope (/opendiamond/dataretriever/augment_store.py:76)",
+          "key": "opendiamond:opendiamond/dataretriever/util.py:82:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "opendiamond/dataretriever/util.py",
+          "line": 94,
+          "message": "untrusted input reaches open() argument 'file', passed in by opendiamond.dataretriever.augment_store.get_scope (/opendiamond/dataretriever/augment_store.py:76)",
+          "key": "opendiamond:opendiamond/dataretriever/util.py:94:path-traversal",
+          "label": "unlabelled"
+        }
+      ]
+    },
+    {
+      "id": "helm-flask-celery",
+      "repo": "https://github.com/olmax99/helm-flask-celery",
+      "vulnerable": {
+        "commit": "0e8a6bdc4fa5b35fbdda18b27c8e768df8a9bb3c",
+        "files": 30,
+        "skipped": 0,
+        "findings": [
+          {
+            "rule": "path-traversal",
+            "file": "webapiservice/flaskapi/core/app_setup.py",
+            "line": 83,
+            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'"
+          }
+        ]
+      },
+      "fixed": {
+        "commit": "28c985d712d7ac26893433e8035e2e3678fcae9f",
+        "files": 30,
+        "skipped": 0,
+        "findings": []
+      },
+      "cves": [
+        {
+          "id": "CVE-2022-31549",
+          "rule": "path-traversal",
+          "files": [
+            "webapiservice/flaskapi/core/app_setup.py"
+          ],
+          "detected": true,
+          "hits": [
+            {
+              "rule": "path-traversal",
+              "file": "webapiservice/flaskapi/core/app_setup.py",
+              "line": 83,
+              "message": "untrusted input reaches flask.send_file() argument 'path_or_file'"
+            }
+          ],
+          "cleared": true
+        }
+      ],
+      "other_findings": []
+    }
+  ]
+}

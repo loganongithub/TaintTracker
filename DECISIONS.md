@@ -1,0 +1,46 @@
+# Decisions
+
+One line per decision, with the reason. Newest at the bottom.
+
+- 2026-11-13: Bug classes are SSRF and path traversal. A second bug class is mostly another sink list, so two is cheap.
+- 2026-11-13: Flask only; FastAPI is a stretch goal after phase 4. FastAPI input arrives as typed function parameters, which needs a different source model.
+- 2026-11-13: When unsure, flag. Findings are triaged by hand and the phase 5 ranking step sorts out the noise.
+- 2026-11-13: `engine/` never imports from the plumbing. Keeps the engine testable on a plain string of source code.
+- 2026-11-13: Phase 5 starts at 100 repos and scales to thousands before triage. 100 is enough to debug the pipeline; more repos raises the odds of real findings.
+- 2026-11-13: Track the benchmark false-positive rate from phase 4 onward. The phase 5 ranking step needs something to tune against.
+- 2026-11-13: Target is triaging real findings by about April 2027. Applications open around July 2027 and maintainers can take one to three months to respond.
+- 2026-11-13: Each test snippet declares its expected result in a first-line `# expect:` comment. The expectation sits next to the code, with no separate file to keep in sync.
+- 2026-11-13: The engine's whole public surface is `analyze(source, filename) -> list[Finding]`. One function is enough for the CLI and the tests, and it can be built on in phase 3.
+- 2026-11-13: Docker is deferred until phase 5. It is not installed and nothing before the repo scan needs it.
+- 2026-11-13: Claude writes the engine, reversing the original "I write it myself" rule. Logan's call, to get building faster; Logan still has to be able to explain every part of it.
+- 2026-11-13: A taint value is the set of bug classes a value is still dangerous for, not a yes/no flag. Sanitizers are bug-class specific: `secure_filename` fixes path traversal but not SSRF.
+- 2026-11-13: Sinks are argument-specific (`requests.get` checks only `url`). Tainted data in `timeout=` is not SSRF, and this removes a whole family of false positives.
+- 2026-11-13: `int()`, `float()`, `bool()` and `len()` return clean values. Their output cannot carry a hostname or `../`.
+- 2026-11-13: A call is tainted if any argument or the object it is called on is tainted. Covers `url.strip()`; over-taints some harmless calls, which fits "flag when unsure".
+- 2026-11-13: Response bodies are not a separate source, but `requests.get(tainted)` returns tainted data through the call rule. Deliberate: second-order flows come for free.
+- 2026-11-13: After an `if`, a variable is tainted if either branch taints it; loop bodies run twice. Simple, never misses a flow through a branch, and needs no control-flow graph.
+- 2026-11-13: A constant prefix `http(s)://host/` clears SSRF taint; a prefix with no slash after the host does not. Without the slash, `@evil.com` or `.evil.com` can still change the host.
+- 2026-11-13: Route parameters with `int`, `float` or `uuid` converters are not sources; default and `path` converters are. Both of those are flagged even though the default converter blocks `/`, because backslashes still traverse on Windows.
+- 2026-11-13: Names are resolved through the file's imports before matching rules. `import requests as http` and `from flask import request as req` must still match.
+- 2026-11-13: Cross-function tracking uses per-function summaries, not inlining callees at each call site. Each function is analyzed without knowing its callers, which scales to large repos and handles recursion.
+- 2026-11-13: Summaries are built by giving each parameter a label naming itself and seeing where the label ends up. The same tracker code produces both real findings and summaries, so there is one set of propagation rules.
+- 2026-11-13: Summaries are recomputed in rounds until none change (capped at 10). Functions call each other in any order, including recursively; taint only grows, so the loop must stop.
+- 2026-11-13: A call into a project function uses its summary instead of the "any tainted argument" rule. A helper that sanitizes or ignores its argument stops producing false positives.
+- 2026-11-13: A cross-function finding is reported at the sink line, with the calling handler in the message. The sink is where the fix goes; the message keeps the entry point for triage.
+- 2026-11-13: A helper whose parameter reaches a sink is not a finding on its own, only when a caller passes it tainted data. Otherwise every wrapper around `open` or `requests.get` would be flagged.
+- 2026-11-13: Imported names are matched to project functions by dotted suffix, and re-exports through `__init__.py` are followed. Repos often have their import root below the scan root (`src/pkg/...`).
+- 2026-11-13: Only top-level functions can be called across functions; `self.method()` calls and class instances are not resolved. That needs type inference; revisit only if the CVE benchmark shows misses from it.
+- 2026-11-13: Benchmark cases pin exact commits; the vulnerable version is the parent of the fix commit. Results are reproducible and each case needs only one hash.
+- 2026-11-13: A CVE counts as detected on a file-level match (right bug class in one of the CVE's files). Line numbers are not in advisories; each detection still needs a manual check that it is the same bug.
+- 2026-11-13: The false-positive rate is computed only over findings labelled by hand in `benchmarks/labels.toml`; unlabelled findings are reported separately. Calling every non-CVE finding a false positive would be wrong, since some are real bugs.
+- 2026-11-13: The benchmark starts with 8 CVEs in 5 repos and grows from the CVE-2022-315xx `send_file` batch. Small enough to verify every entry by hand first.
+- 2026-11-13: Benchmark checkouts are shallow, git-ignored, and only read, never executed. Keeps downloads small and third-party code out of the repo and off the CPU.
+- 2026-11-13: `safe_join` (Flask and Werkzeug) is a path-traversal sanitizer. The benchmark showed it is the standard fix: two of four fixed versions were still flagged without it.
+- 2026-11-13: Rules are only added from the benchmark when they are general library facts, never to make one case pass. Tuning to 8 CVEs would inflate the score and not carry over to the real scan.
+- 2026-11-13: Method calls are still not followed after the first benchmark run, even though that caused both misses (Whoogle's `g.user_request.send`). The fix is a design choice with a false-positive cost, to be decided before phase 5.
+- 2026-11-13: Reversed the line above: `obj.method()` is matched to a project method when exactly one class defines that name. Real type inference is out of scope; on the benchmark this caught both Whoogle SSRFs and added no other findings across the five repos.
+- 2026-11-13: A guessed method match can only add taint to the usual "tainted in, tainted out" result, never remove it. The guess may be the wrong class, and a wrong guess must not hide a real flow.
+- 2026-11-13: Method names that built-in types also have (`get`, `read`, `update`, ...) are never guessed, and neither are calls on a name bound by `import x`. `d.get(k)` is almost always a dict, and `os.path.join` is a module function.
+- 2026-11-13: `self.method()` resolves to the enclosing class's own method and is trusted fully. That one is not a guess (ignoring subclass overrides).
+- 2026-11-13: One finding per sink line, even when several handlers reach it. Whoogle's two SSRF CVEs share one sink and show as one finding naming only the first handler; listing every entry point is deferred to phase 6 triage support.
+- 2026-11-13: Allowlist checks (`if host not in ALLOWED: abort()`) are not recognised as sanitizers yet. Needs reasoning about conditions; revisit when the CVE benchmark shows how often it matters.

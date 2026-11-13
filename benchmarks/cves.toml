@@ -1,0 +1,86 @@
+# Known CVEs the scanner is measured against.
+#
+# Each [[case]] is one repository pinned to exact commits:
+#   fix         commit that fixed the bug. The vulnerable version is its
+#               parent and the fixed version is the commit itself.
+#   vulnerable  use instead of (or with) `fix` to pin the vulnerable
+#               version directly, for bugs that were never fixed.
+#   fixed       override the fixed version (for example a release tag).
+#
+# Each [[case.cve]] is one CVE in that repository:
+#   rule   "ssrf" or "path-traversal"
+#   files  where a finding must be for the CVE to count as detected.
+#          Defaults to the Python files changed by the fix commit.
+#
+# Sources for every entry are in benchmarks/SOURCES.md.
+
+[[case]]
+id = "whoogle-search"
+repo = "https://github.com/benbusby/whoogle-search"
+fix = "3a2e0b262e4a076a20416b45e6b6f23fd265aeda"
+
+  [[case.cve]]
+  id = "CVE-2024-22203"
+  rule = "ssrf"
+  note = "element() passes the url parameter to g.user_request.send(), a method that calls requests.get"
+  files = ["app/routes.py", "app/request.py"]
+
+  [[case.cve]]
+  id = "CVE-2024-22205"
+  rule = "ssrf"
+  note = "window() passes the location parameter to the same send() method"
+  files = ["app/routes.py", "app/request.py"]
+
+  [[case.cve]]
+  id = "CVE-2024-22204"
+  rule = "path-traversal"
+  note = "config() joins the name parameter into a path that is opened for writing"
+  files = ["app/routes.py"]
+
+[[case]]
+id = "calibre-web"
+repo = "https://github.com/janeczku/calibre-web"
+fix = "965352c8d96c9eae7a6867ff76b0db137d04b0b8"
+
+  [[case.cve]]
+  id = "CVE-2022-0766"
+  rule = "ssrf"
+  note = "save_cover_from_url() fetches a user-supplied cover URL; the fix only extends a localhost blocklist, so the fixed version is expected to stay flagged"
+  files = ["cps/helper.py"]
+
+[[case]]
+id = "flaskcode"
+repo = "https://github.com/sujeetkv/flaskcode"
+vulnerable = "05a9d61c482f35d13480ba5337ef2ffe6072cae5"
+
+  [[case.cve]]
+  id = "CVE-2023-52288"
+  rule = "path-traversal"
+  note = "GET /resource-data/<file_path> reads an arbitrary file; no fixed release"
+  files = ["flaskcode/views.py", "flaskcode/utils.py"]
+
+  [[case.cve]]
+  id = "CVE-2023-52289"
+  rule = "path-traversal"
+  note = "POST /update-resource-data/<file_path> writes an arbitrary file; no fixed release"
+  files = ["flaskcode/views.py", "flaskcode/utils.py"]
+
+[[case]]
+id = "opendiamond"
+repo = "https://github.com/cmusatyalab/opendiamond"
+fix = "398049c187ee644beabab44d6fece82251c1ea56"
+
+  [[case.cve]]
+  id = "CVE-2022-31506"
+  rule = "path-traversal"
+  note = "unsafe use of Flask send_file"
+
+[[case]]
+id = "helm-flask-celery"
+repo = "https://github.com/olmax99/helm-flask-celery"
+fix = "28c985d712d7ac26893433e8035e2e3678fcae9f"
+
+  [[case.cve]]
+  id = "CVE-2022-31549"
+  rule = "path-traversal"
+  note = "unsafe use of Flask send_file"
