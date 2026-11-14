@@ -18,6 +18,7 @@ import tomllib
 from pathlib import Path
 
 from taintscan.engine import Project
+from taintscan.finding import HIGH
 
 
 class BenchmarkError(Exception):
@@ -84,6 +85,7 @@ def scan(repo: Path, commit: str) -> dict:
             "file": Path(f.file).relative_to(repo).as_posix(),
             "line": f.line,
             "message": f.message.replace(str(repo), "").replace("\\", "/"),
+            "confidence": f.confidence,
         }
         for f in project.run()
     ]
@@ -91,7 +93,10 @@ def scan(repo: Path, commit: str) -> dict:
         "commit": commit,
         "files": len(project.modules),
         "skipped": len(project.skipped),
-        "findings": findings,
+        # Everything the benchmark scores is high-confidence. Low-confidence
+        # findings are kept on the side so they can still be inspected.
+        "findings": [f for f in findings if f["confidence"] == HIGH],
+        "low_confidence": [f for f in findings if f["confidence"] != HIGH],
     }
 
 
@@ -175,6 +180,9 @@ def summarize(cases: list[dict]) -> dict:
         "cleared_by_fix": sum(cve["cleared"] == "yes" for cve in with_fix),
         "partly_cleared_by_fix": sum(cve["cleared"] == "partly" for cve in with_fix),
         "findings": len(everything),
+        "low_confidence": sum(
+            len(case["vulnerable"]["low_confidence"]) for case in cases if "vulnerable" in case
+        ),
         "other_findings": len(others),
         "unlabelled": sum(f["label"] == "unlabelled" for f in everything),
         "true_positives": true_positives,
@@ -204,6 +212,7 @@ def report(cases: list[dict], summary: dict) -> str:
         f"- Findings on vulnerable versions: {summary['findings']}, of which "
         f"{summary['other_findings']} are not credited to a listed CVE",
         f"- Findings not yet labelled by hand: {summary['unlabelled']}",
+        f"- Low-confidence findings, not scored: {summary['low_confidence']}",
     ]
     if summary["false_positive_rate"] is None:
         lines.append("- False-positive rate: not measured yet (no findings labelled by hand)")

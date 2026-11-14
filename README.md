@@ -2,15 +2,15 @@
 
 Static taint analysis that finds SSRF and path traversal in Flask apps.
 
-Status: phase 4 done. On 9 held-out CVEs the engine detects 7 (78%); on the 8 CVEs its rules were adjusted against it detects all 8. The false-positive rate over the 30 hand-labelled findings is 43%; 85 findings are still unlabelled. See `benchmarks/RESULTS.md`.
+Status: phase 4 done. On 9 held-out CVEs the engine detects 7 (78%); on the 8 CVEs its rules were adjusted against it detects all 8. The false-positive rate over the 24 hand-labelled findings is 29%; 81 findings are still unlabelled, and 10 more are low-confidence and not scored. See `benchmarks/RESULTS.md`.
 
 ## Known limits
 
 - Python 2 source cannot be parsed and is skipped (the scan reports how many files it skipped).
-- Method calls (`obj.method(x)`) are followed by name only: the engine guesses the method when exactly one class in the project defines it. Ambiguous names, inherited methods and constructors (`__init__`) are not followed.
+- Method calls (`obj.method(x)`) are followed when the object's class is visible (assigned from a constructor in the same function or at module level) or when exactly one class in the project defines the method. Constructors (`__init__`) and object fields are not tracked.
+- Only three kinds of validation check are understood: allowlist membership, `re.match`/`fullmatch`, and `startswith` on a resolved path. Blocklists and custom validator functions are not trusted.
 - A sink reached from several handlers is reported once, naming only one of them.
 - Taint stored in globals, class attributes or databases is not tracked between functions.
-- Allowlist checks are not recognised as sanitizers, so correctly validated code is still flagged.
 - Method calls on objects are not matched as sinks (`requests.Session().get(url)`, `Path(p).read_text()`).
 
 ## Setup (Windows)
@@ -25,6 +25,7 @@ python -m venv .venv
 ```powershell
 .\.venv\Scripts\python -m pytest          # run the snippet suite
 .\.venv\Scripts\taintscan scan path\to\code
+.\.venv\Scripts\taintscan scan path\to\code --low   # include low-confidence findings
 .\.venv\Scripts\taintscan benchmark       # clone the CVE cases and measure
 ```
 

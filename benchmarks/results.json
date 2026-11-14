@@ -13,14 +13,15 @@
     "cves": 17,
     "detected": 15,
     "detected_with_fix": 11,
-    "cleared_by_fix": 4,
+    "cleared_by_fix": 5,
     "partly_cleared_by_fix": 3,
-    "findings": 115,
-    "other_findings": 70,
-    "unlabelled": 85,
+    "findings": 105,
+    "low_confidence": 10,
+    "other_findings": 62,
+    "unlabelled": 81,
     "true_positives": 17,
-    "false_positives": 13,
-    "false_positive_rate": 0.433
+    "false_positives": 7,
+    "false_positive_rate": 0.292
   },
   "cases": [
     {
@@ -37,6 +38,7 @@
             "file": "app/request.py",
             "line": 339,
             "message": "untrusted input reaches requests.get() argument 'url', passed in by app.routes.element (/app/routes.py:479)",
+            "confidence": "high",
             "key": "whoogle-search:app/request.py:339:ssrf",
             "label": "tp"
           },
@@ -45,6 +47,7 @@
             "file": "app/routes.py",
             "line": 430,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "whoogle-search:app/routes.py:430:path-traversal",
             "label": "tp"
           },
@@ -53,10 +56,12 @@
             "file": "app/routes.py",
             "line": 445,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "whoogle-search:app/routes.py:445:path-traversal",
             "label": "tp"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "fixed": {
         "commit": "3a2e0b262e4a076a20416b45e6b6f23fd265aeda",
@@ -67,21 +72,11 @@
             "rule": "ssrf",
             "file": "app/request.py",
             "line": 339,
-            "message": "untrusted input reaches requests.get() argument 'url', passed in by app.routes.element (/app/routes.py:493)"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "app/routes.py",
-            "line": 437,
-            "message": "untrusted input reaches open() argument 'file'"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "app/routes.py",
-            "line": 452,
-            "message": "untrusted input reaches open() argument 'file'"
+            "message": "untrusted input reaches requests.get() argument 'url', passed in by app.routes.element (/app/routes.py:493)",
+            "confidence": "high"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "cves": [
         {
@@ -99,6 +94,7 @@
               "file": "app/request.py",
               "line": 339,
               "message": "untrusted input reaches requests.get() argument 'url', passed in by app.routes.element (/app/routes.py:479)",
+              "confidence": "high",
               "key": "whoogle-search:app/request.py:339:ssrf",
               "label": "tp"
             }
@@ -120,6 +116,7 @@
               "file": "app/request.py",
               "line": 339,
               "message": "untrusted input reaches requests.get() argument 'url', passed in by app.routes.element (/app/routes.py:479)",
+              "confidence": "high",
               "key": "whoogle-search:app/request.py:339:ssrf",
               "label": "tp"
             }
@@ -140,6 +137,7 @@
               "file": "app/routes.py",
               "line": 430,
               "message": "untrusted input reaches open() argument 'file'",
+              "confidence": "high",
               "key": "whoogle-search:app/routes.py:430:path-traversal",
               "label": "tp"
             },
@@ -148,11 +146,12 @@
               "file": "app/routes.py",
               "line": 445,
               "message": "untrusted input reaches open() argument 'file'",
+              "confidence": "high",
               "key": "whoogle-search:app/routes.py:445:path-traversal",
               "label": "tp"
             }
           ],
-          "cleared": "no"
+          "cleared": "yes"
         }
       ],
       "other_findings": []
@@ -171,6 +170,7 @@
             "file": "cps/admin.py",
             "line": 981,
             "message": "untrusted input reaches os.listdir() argument 'path'",
+            "confidence": "high",
             "key": "calibre-web:cps/admin.py:981:path-traversal",
             "label": "fp"
           },
@@ -179,14 +179,25 @@
             "file": "cps/comic.py",
             "line": 69,
             "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+            "confidence": "high",
             "key": "calibre-web:cps/comic.py:69:path-traversal",
             "label": "fp"
           },
           {
             "rule": "path-traversal",
             "file": "cps/editbooks.py",
+            "line": 1033,
+            "message": "untrusted input reaches shutil.copyfile() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1084)",
+            "confidence": "high",
+            "key": "calibre-web:cps/editbooks.py:1033:path-traversal",
+            "label": "unlabelled"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/editbooks.py",
             "line": 1035,
             "message": "untrusted input reaches os.unlink() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1084)",
+            "confidence": "high",
             "key": "calibre-web:cps/editbooks.py:1035:path-traversal",
             "label": "fp"
           },
@@ -195,6 +206,7 @@
             "file": "cps/epub.py",
             "line": 36,
             "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+            "confidence": "high",
             "key": "calibre-web:cps/epub.py:36:path-traversal",
             "label": "fp"
           },
@@ -203,62 +215,61 @@
             "file": "cps/fb2.py",
             "line": 31,
             "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+            "confidence": "high",
             "key": "calibre-web:cps/fb2.py:31:path-traversal",
             "label": "fp"
           },
           {
             "rule": "path-traversal",
             "file": "cps/helper.py",
-            "line": 347,
-            "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
-            "key": "calibre-web:cps/helper.py:347:path-traversal",
-            "label": "fp"
+            "line": 403,
+            "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1069)",
+            "confidence": "high",
+            "key": "calibre-web:cps/helper.py:403:path-traversal",
+            "label": "unlabelled"
           },
           {
             "rule": "path-traversal",
             "file": "cps/helper.py",
-            "line": 349,
-            "message": "untrusted input reaches os.remove() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
-            "key": "calibre-web:cps/helper.py:349:path-traversal",
-            "label": "fp"
+            "line": 437,
+            "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1069)",
+            "confidence": "high",
+            "key": "calibre-web:cps/helper.py:437:path-traversal",
+            "label": "unlabelled"
           },
           {
             "rule": "path-traversal",
             "file": "cps/helper.py",
-            "line": 356,
-            "message": "untrusted input reaches os.unlink() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
-            "key": "calibre-web:cps/helper.py:356:path-traversal",
-            "label": "fp"
+            "line": 540,
+            "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+            "confidence": "high",
+            "key": "calibre-web:cps/helper.py:540:path-traversal",
+            "label": "unlabelled"
           },
           {
             "rule": "path-traversal",
             "file": "cps/helper.py",
-            "line": 363,
-            "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
-            "key": "calibre-web:cps/helper.py:363:path-traversal",
-            "label": "fp"
+            "line": 547,
+            "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+            "confidence": "high",
+            "key": "calibre-web:cps/helper.py:547:path-traversal",
+            "label": "unlabelled"
           },
           {
             "rule": "path-traversal",
             "file": "cps/helper.py",
-            "line": 368,
-            "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
-            "key": "calibre-web:cps/helper.py:368:path-traversal",
-            "label": "fp"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "cps/helper.py",
-            "line": 370,
-            "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
-            "key": "calibre-web:cps/helper.py:370:path-traversal",
-            "label": "fp"
+            "line": 553,
+            "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+            "confidence": "high",
+            "key": "calibre-web:cps/helper.py:553:path-traversal",
+            "label": "unlabelled"
           },
           {
             "rule": "path-traversal",
             "file": "cps/helper.py",
             "line": 577,
             "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+            "confidence": "high",
             "key": "calibre-web:cps/helper.py:577:path-traversal",
             "label": "unlabelled"
           },
@@ -267,6 +278,7 @@
             "file": "cps/helper.py",
             "line": 578,
             "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+            "confidence": "high",
             "key": "calibre-web:cps/helper.py:578:path-traversal",
             "label": "unlabelled"
           },
@@ -275,6 +287,7 @@
             "file": "cps/helper.py",
             "line": 740,
             "message": "untrusted input reaches requests.get() argument 'url', passed in by cps.editbooks.edit_book (/cps/editbooks.py:808)",
+            "confidence": "high",
             "key": "calibre-web:cps/helper.py:740:ssrf",
             "label": "tp"
           },
@@ -283,6 +296,7 @@
             "file": "cps/uploader.py",
             "line": 208,
             "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+            "confidence": "high",
             "key": "calibre-web:cps/uploader.py:208:path-traversal",
             "label": "fp"
           },
@@ -291,10 +305,12 @@
             "file": "cps/web.py",
             "line": 1445,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "calibre-web:cps/web.py:1445:path-traversal",
             "label": "fp"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "fixed": {
         "commit": "965352c8d96c9eae7a6867ff76b0db137d04b0b8",
@@ -305,99 +321,116 @@
             "rule": "path-traversal",
             "file": "cps/admin.py",
             "line": 981,
-            "message": "untrusted input reaches os.listdir() argument 'path'"
+            "message": "untrusted input reaches os.listdir() argument 'path'",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "cps/comic.py",
             "line": 69,
-            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)"
+            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+            "confidence": "high"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/editbooks.py",
+            "line": 1033,
+            "message": "untrusted input reaches shutil.copyfile() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1084)",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "cps/editbooks.py",
             "line": 1035,
-            "message": "untrusted input reaches os.unlink() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1084)"
+            "message": "untrusted input reaches os.unlink() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1084)",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "cps/epub.py",
             "line": 36,
-            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)"
+            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "cps/fb2.py",
             "line": 31,
-            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)"
+            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "cps/helper.py",
-            "line": 347,
-            "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+            "line": 403,
+            "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1069)",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "cps/helper.py",
-            "line": 349,
-            "message": "untrusted input reaches os.remove() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+            "line": 437,
+            "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1069)",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "cps/helper.py",
-            "line": 356,
-            "message": "untrusted input reaches os.unlink() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+            "line": 540,
+            "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "cps/helper.py",
-            "line": 363,
-            "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+            "line": 547,
+            "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "cps/helper.py",
-            "line": 368,
-            "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "cps/helper.py",
-            "line": 370,
-            "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)"
+            "line": 553,
+            "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "cps/helper.py",
             "line": 577,
-            "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)"
+            "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "cps/helper.py",
             "line": 578,
-            "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)"
+            "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "cps/helper.py",
             "line": 740,
-            "message": "untrusted input reaches requests.get() argument 'url', passed in by cps.editbooks.edit_book (/cps/editbooks.py:808)"
+            "message": "untrusted input reaches requests.get() argument 'url', passed in by cps.editbooks.edit_book (/cps/editbooks.py:808)",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "cps/uploader.py",
             "line": 208,
-            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)"
+            "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "cps/web.py",
             "line": 1445,
-            "message": "untrusted input reaches open() argument 'file'"
+            "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "cves": [
         {
@@ -414,6 +447,7 @@
               "file": "cps/helper.py",
               "line": 740,
               "message": "untrusted input reaches requests.get() argument 'url', passed in by cps.editbooks.edit_book (/cps/editbooks.py:808)",
+              "confidence": "high",
               "key": "calibre-web:cps/helper.py:740:ssrf",
               "label": "tp"
             }
@@ -427,6 +461,7 @@
           "file": "cps/admin.py",
           "line": 981,
           "message": "untrusted input reaches os.listdir() argument 'path'",
+          "confidence": "high",
           "key": "calibre-web:cps/admin.py:981:path-traversal",
           "label": "fp"
         },
@@ -435,14 +470,25 @@
           "file": "cps/comic.py",
           "line": 69,
           "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+          "confidence": "high",
           "key": "calibre-web:cps/comic.py:69:path-traversal",
           "label": "fp"
         },
         {
           "rule": "path-traversal",
           "file": "cps/editbooks.py",
+          "line": 1033,
+          "message": "untrusted input reaches shutil.copyfile() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1084)",
+          "confidence": "high",
+          "key": "calibre-web:cps/editbooks.py:1033:path-traversal",
+          "label": "unlabelled"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/editbooks.py",
           "line": 1035,
           "message": "untrusted input reaches os.unlink() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1084)",
+          "confidence": "high",
           "key": "calibre-web:cps/editbooks.py:1035:path-traversal",
           "label": "fp"
         },
@@ -451,6 +497,7 @@
           "file": "cps/epub.py",
           "line": 36,
           "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+          "confidence": "high",
           "key": "calibre-web:cps/epub.py:36:path-traversal",
           "label": "fp"
         },
@@ -459,62 +506,61 @@
           "file": "cps/fb2.py",
           "line": 31,
           "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+          "confidence": "high",
           "key": "calibre-web:cps/fb2.py:31:path-traversal",
           "label": "fp"
         },
         {
           "rule": "path-traversal",
           "file": "cps/helper.py",
-          "line": 347,
-          "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
-          "key": "calibre-web:cps/helper.py:347:path-traversal",
-          "label": "fp"
+          "line": 403,
+          "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1069)",
+          "confidence": "high",
+          "key": "calibre-web:cps/helper.py:403:path-traversal",
+          "label": "unlabelled"
         },
         {
           "rule": "path-traversal",
           "file": "cps/helper.py",
-          "line": 349,
-          "message": "untrusted input reaches os.remove() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
-          "key": "calibre-web:cps/helper.py:349:path-traversal",
-          "label": "fp"
+          "line": 437,
+          "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1069)",
+          "confidence": "high",
+          "key": "calibre-web:cps/helper.py:437:path-traversal",
+          "label": "unlabelled"
         },
         {
           "rule": "path-traversal",
           "file": "cps/helper.py",
-          "line": 356,
-          "message": "untrusted input reaches os.unlink() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
-          "key": "calibre-web:cps/helper.py:356:path-traversal",
-          "label": "fp"
+          "line": 540,
+          "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+          "confidence": "high",
+          "key": "calibre-web:cps/helper.py:540:path-traversal",
+          "label": "unlabelled"
         },
         {
           "rule": "path-traversal",
           "file": "cps/helper.py",
-          "line": 363,
-          "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
-          "key": "calibre-web:cps/helper.py:363:path-traversal",
-          "label": "fp"
+          "line": 547,
+          "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+          "confidence": "high",
+          "key": "calibre-web:cps/helper.py:547:path-traversal",
+          "label": "unlabelled"
         },
         {
           "rule": "path-traversal",
           "file": "cps/helper.py",
-          "line": 368,
-          "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
-          "key": "calibre-web:cps/helper.py:368:path-traversal",
-          "label": "fp"
-        },
-        {
-          "rule": "path-traversal",
-          "file": "cps/helper.py",
-          "line": 370,
-          "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.merge_list_book (/cps/editbooks.py:1305)",
-          "key": "calibre-web:cps/helper.py:370:path-traversal",
-          "label": "fp"
+          "line": 553,
+          "message": "untrusted input reaches shutil.move() argument 'src', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+          "confidence": "high",
+          "key": "calibre-web:cps/helper.py:553:path-traversal",
+          "label": "unlabelled"
         },
         {
           "rule": "path-traversal",
           "file": "cps/helper.py",
           "line": 577,
           "message": "untrusted input reaches os.listdir() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+          "confidence": "high",
           "key": "calibre-web:cps/helper.py:577:path-traversal",
           "label": "unlabelled"
         },
@@ -523,6 +569,7 @@
           "file": "cps/helper.py",
           "line": 578,
           "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by cps.editbooks.upload (/cps/editbooks.py:1077)",
+          "confidence": "high",
           "key": "calibre-web:cps/helper.py:578:path-traversal",
           "label": "unlabelled"
         },
@@ -531,6 +578,7 @@
           "file": "cps/uploader.py",
           "line": 208,
           "message": "untrusted input reaches open() argument 'file', passed in by cps.editbooks.upload_single_file (/cps/editbooks.py:675)",
+          "confidence": "high",
           "key": "calibre-web:cps/uploader.py:208:path-traversal",
           "label": "fp"
         },
@@ -539,6 +587,7 @@
           "file": "cps/web.py",
           "line": 1445,
           "message": "untrusted input reaches open() argument 'file'",
+          "confidence": "high",
           "key": "calibre-web:cps/web.py:1445:path-traversal",
           "label": "fp"
         }
@@ -558,6 +607,7 @@
             "file": "flaskcode/utils.py",
             "line": 23,
             "message": "untrusted input reaches io.open() argument 'file', passed in by flaskcode.views.update_resource_data (/flaskcode/views.py:44)",
+            "confidence": "high",
             "key": "flaskcode:flaskcode/utils.py:23:path-traversal",
             "label": "tp"
           },
@@ -566,10 +616,12 @@
             "file": "flaskcode/views.py",
             "line": 22,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "flaskcode:flaskcode/views.py:22:path-traversal",
             "label": "tp"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "fixed": null,
       "cves": [
@@ -588,6 +640,7 @@
               "file": "flaskcode/utils.py",
               "line": 23,
               "message": "untrusted input reaches io.open() argument 'file', passed in by flaskcode.views.update_resource_data (/flaskcode/views.py:44)",
+              "confidence": "high",
               "key": "flaskcode:flaskcode/utils.py:23:path-traversal",
               "label": "tp"
             },
@@ -596,6 +649,7 @@
               "file": "flaskcode/views.py",
               "line": 22,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "flaskcode:flaskcode/views.py:22:path-traversal",
               "label": "tp"
             }
@@ -617,6 +671,7 @@
               "file": "flaskcode/utils.py",
               "line": 23,
               "message": "untrusted input reaches io.open() argument 'file', passed in by flaskcode.views.update_resource_data (/flaskcode/views.py:44)",
+              "confidence": "high",
               "key": "flaskcode:flaskcode/utils.py:23:path-traversal",
               "label": "tp"
             },
@@ -625,6 +680,7 @@
               "file": "flaskcode/views.py",
               "line": 22,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "flaskcode:flaskcode/views.py:22:path-traversal",
               "label": "tp"
             }
@@ -648,6 +704,7 @@
             "file": "opendiamond/dataretriever/diamond_store.py",
             "line": 137,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "opendiamond:opendiamond/dataretriever/diamond_store.py:137:path-traversal",
             "label": "tp"
           },
@@ -656,6 +713,7 @@
             "file": "opendiamond/dataretriever/mixer_store.py",
             "line": 83,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "opendiamond:opendiamond/dataretriever/mixer_store.py:83:path-traversal",
             "label": "unlabelled"
           },
@@ -664,6 +722,7 @@
             "file": "opendiamond/dataretriever/mixer_store.py",
             "line": 203,
             "message": "untrusted input reaches open() argument 'file', passed in by opendiamond.dataretriever.mixer_store.get_mixer_classes (/opendiamond/dataretriever/mixer_store.py:65)",
+            "confidence": "high",
             "key": "opendiamond:opendiamond/dataretriever/mixer_store.py:203:path-traversal",
             "label": "unlabelled"
           },
@@ -672,6 +731,7 @@
             "file": "opendiamond/dataretriever/mixer_store.py",
             "line": 266,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "opendiamond:opendiamond/dataretriever/mixer_store.py:266:path-traversal",
             "label": "unlabelled"
           },
@@ -680,6 +740,7 @@
             "file": "opendiamond/dataretriever/proxy_store.py",
             "line": 57,
             "message": "untrusted input reaches urllib.request.urlopen() argument 'url', passed in by opendiamond.dataretriever.proxy_store.get_scope (/opendiamond/dataretriever/proxy_store.py:49)",
+            "confidence": "high",
             "key": "opendiamond:opendiamond/dataretriever/proxy_store.py:57:ssrf",
             "label": "tp"
           },
@@ -688,6 +749,7 @@
             "file": "opendiamond/dataretriever/test_store.py",
             "line": 106,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "opendiamond:opendiamond/dataretriever/test_store.py:106:path-traversal",
             "label": "unlabelled"
           },
@@ -696,6 +758,7 @@
             "file": "opendiamond/dataretriever/test_store.py",
             "line": 233,
             "message": "untrusted input reaches open() argument 'file', passed in by opendiamond.dataretriever.test_store.get_mixer_classes (/opendiamond/dataretriever/test_store.py:67)",
+            "confidence": "high",
             "key": "opendiamond:opendiamond/dataretriever/test_store.py:233:path-traversal",
             "label": "unlabelled"
           },
@@ -704,6 +767,7 @@
             "file": "opendiamond/dataretriever/test_store.py",
             "line": 296,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "opendiamond:opendiamond/dataretriever/test_store.py:296:path-traversal",
             "label": "unlabelled"
           },
@@ -712,10 +776,12 @@
             "file": "opendiamond/dataretriever/yfcc100m_mysql_store.py",
             "line": 128,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "opendiamond:opendiamond/dataretriever/yfcc100m_mysql_store.py:128:path-traversal",
             "label": "unlabelled"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "fixed": {
         "commit": "398049c187ee644beabab44d6fece82251c1ea56",
@@ -726,9 +792,11 @@
             "rule": "ssrf",
             "file": "opendiamond/dataretriever/proxy_store.py",
             "line": 57,
-            "message": "untrusted input reaches urllib.request.urlopen() argument 'url', passed in by opendiamond.dataretriever.proxy_store.get_scope (/opendiamond/dataretriever/proxy_store.py:49)"
+            "message": "untrusted input reaches urllib.request.urlopen() argument 'url', passed in by opendiamond.dataretriever.proxy_store.get_scope (/opendiamond/dataretriever/proxy_store.py:49)",
+            "confidence": "high"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "cves": [
         {
@@ -750,6 +818,7 @@
               "file": "opendiamond/dataretriever/diamond_store.py",
               "line": 137,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "opendiamond:opendiamond/dataretriever/diamond_store.py:137:path-traversal",
               "label": "tp"
             },
@@ -758,6 +827,7 @@
               "file": "opendiamond/dataretriever/mixer_store.py",
               "line": 83,
               "message": "untrusted input reaches open() argument 'file'",
+              "confidence": "high",
               "key": "opendiamond:opendiamond/dataretriever/mixer_store.py:83:path-traversal",
               "label": "unlabelled"
             },
@@ -766,6 +836,7 @@
               "file": "opendiamond/dataretriever/mixer_store.py",
               "line": 203,
               "message": "untrusted input reaches open() argument 'file', passed in by opendiamond.dataretriever.mixer_store.get_mixer_classes (/opendiamond/dataretriever/mixer_store.py:65)",
+              "confidence": "high",
               "key": "opendiamond:opendiamond/dataretriever/mixer_store.py:203:path-traversal",
               "label": "unlabelled"
             },
@@ -774,6 +845,7 @@
               "file": "opendiamond/dataretriever/mixer_store.py",
               "line": 266,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "opendiamond:opendiamond/dataretriever/mixer_store.py:266:path-traversal",
               "label": "unlabelled"
             },
@@ -782,6 +854,7 @@
               "file": "opendiamond/dataretriever/test_store.py",
               "line": 106,
               "message": "untrusted input reaches open() argument 'file'",
+              "confidence": "high",
               "key": "opendiamond:opendiamond/dataretriever/test_store.py:106:path-traversal",
               "label": "unlabelled"
             },
@@ -790,6 +863,7 @@
               "file": "opendiamond/dataretriever/test_store.py",
               "line": 233,
               "message": "untrusted input reaches open() argument 'file', passed in by opendiamond.dataretriever.test_store.get_mixer_classes (/opendiamond/dataretriever/test_store.py:67)",
+              "confidence": "high",
               "key": "opendiamond:opendiamond/dataretriever/test_store.py:233:path-traversal",
               "label": "unlabelled"
             },
@@ -798,6 +872,7 @@
               "file": "opendiamond/dataretriever/test_store.py",
               "line": 296,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "opendiamond:opendiamond/dataretriever/test_store.py:296:path-traversal",
               "label": "unlabelled"
             },
@@ -806,6 +881,7 @@
               "file": "opendiamond/dataretriever/yfcc100m_mysql_store.py",
               "line": 128,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "opendiamond:opendiamond/dataretriever/yfcc100m_mysql_store.py:128:path-traversal",
               "label": "unlabelled"
             }
@@ -819,6 +895,7 @@
           "file": "opendiamond/dataretriever/proxy_store.py",
           "line": 57,
           "message": "untrusted input reaches urllib.request.urlopen() argument 'url', passed in by opendiamond.dataretriever.proxy_store.get_scope (/opendiamond/dataretriever/proxy_store.py:49)",
+          "confidence": "high",
           "key": "opendiamond:opendiamond/dataretriever/proxy_store.py:57:ssrf",
           "label": "tp"
         }
@@ -838,16 +915,19 @@
             "file": "webapiservice/flaskapi/core/app_setup.py",
             "line": 83,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "helm-flask-celery:webapiservice/flaskapi/core/app_setup.py:83:path-traversal",
             "label": "tp"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "fixed": {
         "commit": "28c985d712d7ac26893433e8035e2e3678fcae9f",
         "files": 30,
         "skipped": 0,
-        "findings": []
+        "findings": [],
+        "low_confidence": []
       },
       "cves": [
         {
@@ -864,6 +944,7 @@
               "file": "webapiservice/flaskapi/core/app_setup.py",
               "line": 83,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "helm-flask-celery:webapiservice/flaskapi/core/app_setup.py:83:path-traversal",
               "label": "tp"
             }
@@ -887,6 +968,7 @@
             "file": "modules/hub/hub/views.py",
             "line": 352,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "OnyxForum:modules/hub/hub/views.py:352:path-traversal",
             "label": "unlabelled"
           },
@@ -895,15 +977,8 @@
             "file": "modules/hub/hub/views.py",
             "line": 374,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "OnyxForum:modules/hub/hub/views.py:374:path-traversal",
-            "label": "unlabelled"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "modules/hub/hub/views.py",
-            "line": 443,
-            "message": "untrusted input reaches os.listdir() argument 'path'",
-            "key": "OnyxForum:modules/hub/hub/views.py:443:path-traversal",
             "label": "unlabelled"
           },
           {
@@ -911,10 +986,12 @@
             "file": "modules/hub/hub/views.py",
             "line": 493,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "OnyxForum:modules/hub/hub/views.py:493:path-traversal",
             "label": "tp"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "fixed": {
         "commit": "f25543dfc62a9694d7e4f67eebfa45e3de916053",
@@ -925,21 +1002,18 @@
             "rule": "path-traversal",
             "file": "modules/hub/hub/views.py",
             "line": 354,
-            "message": "untrusted input reaches open() argument 'file'"
+            "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "modules/hub/hub/views.py",
             "line": 376,
-            "message": "untrusted input reaches open() argument 'file'"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "modules/hub/hub/views.py",
-            "line": 445,
-            "message": "untrusted input reaches os.listdir() argument 'path'"
+            "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "cves": [
         {
@@ -956,6 +1030,7 @@
               "file": "modules/hub/hub/views.py",
               "line": 352,
               "message": "untrusted input reaches open() argument 'file'",
+              "confidence": "high",
               "key": "OnyxForum:modules/hub/hub/views.py:352:path-traversal",
               "label": "unlabelled"
             },
@@ -964,15 +1039,8 @@
               "file": "modules/hub/hub/views.py",
               "line": 374,
               "message": "untrusted input reaches open() argument 'file'",
+              "confidence": "high",
               "key": "OnyxForum:modules/hub/hub/views.py:374:path-traversal",
-              "label": "unlabelled"
-            },
-            {
-              "rule": "path-traversal",
-              "file": "modules/hub/hub/views.py",
-              "line": 443,
-              "message": "untrusted input reaches os.listdir() argument 'path'",
-              "key": "OnyxForum:modules/hub/hub/views.py:443:path-traversal",
               "label": "unlabelled"
             },
             {
@@ -980,6 +1048,7 @@
               "file": "modules/hub/hub/views.py",
               "line": 493,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "OnyxForum:modules/hub/hub/views.py:493:path-traversal",
               "label": "tp"
             }
@@ -1003,6 +1072,7 @@
             "file": "app.py",
             "line": 127,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "wormnest:app.py:127:path-traversal",
             "label": "tp"
           },
@@ -1011,16 +1081,19 @@
             "file": "app.py",
             "line": 130,
             "message": "untrusted input reaches os.listdir() argument 'path'",
+            "confidence": "high",
             "key": "wormnest:app.py:130:path-traversal",
             "label": "tp"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "fixed": {
         "commit": "2dfe96fc2570586ac487b399ac20d41b3c114861",
         "files": 11,
         "skipped": 0,
-        "findings": []
+        "findings": [],
+        "low_confidence": []
       },
       "cves": [
         {
@@ -1037,6 +1110,7 @@
               "file": "app.py",
               "line": 127,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "wormnest:app.py:127:path-traversal",
               "label": "tp"
             },
@@ -1045,6 +1119,7 @@
               "file": "app.py",
               "line": 130,
               "message": "untrusted input reaches os.listdir() argument 'path'",
+              "confidence": "high",
               "key": "wormnest:app.py:130:path-traversal",
               "label": "tp"
             }
@@ -1064,18 +1139,11 @@
         "skipped": 0,
         "findings": [
           {
-            "rule": "path-traversal",
-            "file": "lib/python/orchest-internals/_orchest/internals/utils.py",
-            "line": 127,
-            "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.filemanager_upload (/services/orchest-webserver/app/app/views/views.py:1124)",
-            "key": "orchest:lib/python/orchest-internals/_orchest/internals/utils.py:127:path-traversal",
-            "label": "unlabelled"
-          },
-          {
             "rule": "ssrf",
             "file": "services/auth-server/app/app/views.py",
             "line": 297,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/auth-server/app/app/views.py:297:ssrf",
             "label": "unlabelled"
           },
@@ -1084,6 +1152,7 @@
             "file": "services/orchest-webserver/app/app/core/jobs.py",
             "line": 109,
             "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_jobs_duplicate (/services/orchest-webserver/app/app/views/orchest_api.py:245)",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/core/jobs.py:109:ssrf",
             "label": "unlabelled"
           },
@@ -1092,6 +1161,7 @@
             "file": "services/orchest-webserver/app/app/core/jobs.py",
             "line": 144,
             "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_jobs_duplicate (/services/orchest-webserver/app/app/views/orchest_api.py:245)",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/core/jobs.py:144:ssrf",
             "label": "unlabelled"
           },
@@ -1100,6 +1170,7 @@
             "file": "services/orchest-webserver/app/app/core/jobs.py",
             "line": 148,
             "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_jobs_duplicate (/services/orchest-webserver/app/app/views/orchest_api.py:245)",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/core/jobs.py:148:ssrf",
             "label": "unlabelled"
           },
@@ -1108,6 +1179,7 @@
             "file": "services/orchest-webserver/app/app/utils.py",
             "line": 194,
             "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.EnvironmentResource.post (/services/orchest-webserver/app/app/views/views.py:144)",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/utils.py:194:path-traversal",
             "label": "unlabelled"
           },
@@ -1116,6 +1188,7 @@
             "file": "services/orchest-webserver/app/app/utils.py",
             "line": 206,
             "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.EnvironmentResource.post (/services/orchest-webserver/app/app/views/views.py:144)",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/utils.py:206:path-traversal",
             "label": "unlabelled"
           },
@@ -1124,6 +1197,7 @@
             "file": "services/orchest-webserver/app/app/utils.py",
             "line": 215,
             "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_environment_image_builds (/services/orchest-webserver/app/app/views/orchest_api.py:140)",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/utils.py:215:path-traversal",
             "label": "unlabelled"
           },
@@ -1132,6 +1206,7 @@
             "file": "services/orchest-webserver/app/app/utils.py",
             "line": 218,
             "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_environment_image_builds (/services/orchest-webserver/app/app/views/orchest_api.py:140)",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/utils.py:218:path-traversal",
             "label": "unlabelled"
           },
@@ -1140,6 +1215,7 @@
             "file": "services/orchest-webserver/app/app/utils.py",
             "line": 285,
             "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_sessions_post (/services/orchest-webserver/app/app/views/orchest_api.py:355)",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/utils.py:285:path-traversal",
             "label": "unlabelled"
           },
@@ -1148,15 +1224,8 @@
             "file": "services/orchest-webserver/app/app/utils.py",
             "line": 346,
             "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.views.file_viewer (/services/orchest-webserver/app/app/views/views.py:745)",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/utils.py:346:ssrf",
-            "label": "unlabelled"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "services/orchest-webserver/app/app/utils.py",
-            "line": 551,
-            "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.pipelines_json (/services/orchest-webserver/app/app/views/views.py:856)",
-            "key": "orchest:services/orchest-webserver/app/app/utils.py:551:path-traversal",
             "label": "unlabelled"
           },
           {
@@ -1164,6 +1233,7 @@
             "file": "services/orchest-webserver/app/app/utils.py",
             "line": 600,
             "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.filemanager_create (/services/orchest-webserver/app/app/views/views.py:964)",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/utils.py:600:path-traversal",
             "label": "unlabelled"
           },
@@ -1172,6 +1242,7 @@
             "file": "services/orchest-webserver/app/app/utils.py",
             "line": 636,
             "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.pipelines_json (/services/orchest-webserver/app/app/views/views.py:856)",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/utils.py:636:path-traversal",
             "label": "unlabelled"
           },
@@ -1180,6 +1251,7 @@
             "file": "services/orchest-webserver/app/app/utils.py",
             "line": 689,
             "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.pipelines_json (/services/orchest-webserver/app/app/views/views.py:856)",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/utils.py:689:path-traversal",
             "label": "unlabelled"
           },
@@ -1188,6 +1260,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 69,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:69:ssrf",
             "label": "unlabelled"
           },
@@ -1196,6 +1269,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 89,
             "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:89:ssrf",
             "label": "unlabelled"
           },
@@ -1204,6 +1278,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 113,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:113:ssrf",
             "label": "unlabelled"
           },
@@ -1212,6 +1287,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 161,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:161:ssrf",
             "label": "unlabelled"
           },
@@ -1220,6 +1296,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 179,
             "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:179:ssrf",
             "label": "unlabelled"
           },
@@ -1228,6 +1305,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 301,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:301:ssrf",
             "label": "unlabelled"
           },
@@ -1236,6 +1314,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 316,
             "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:316:ssrf",
             "label": "unlabelled"
           },
@@ -1244,6 +1323,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 391,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:391:ssrf",
             "label": "unlabelled"
           },
@@ -1252,6 +1332,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 428,
             "message": "untrusted input reaches requests.put() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:428:ssrf",
             "label": "unlabelled"
           },
@@ -1260,6 +1341,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 492,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:492:ssrf",
             "label": "unlabelled"
           },
@@ -1268,6 +1350,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 506,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:506:ssrf",
             "label": "unlabelled"
           },
@@ -1276,6 +1359,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 516,
             "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:516:ssrf",
             "label": "unlabelled"
           },
@@ -1284,6 +1368,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 532,
             "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:532:ssrf",
             "label": "unlabelled"
           },
@@ -1292,6 +1377,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 542,
             "message": "untrusted input reaches requests.post() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:542:ssrf",
             "label": "unlabelled"
           },
@@ -1300,6 +1386,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 554,
             "message": "untrusted input reaches requests.post() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:554:ssrf",
             "label": "unlabelled"
           },
@@ -1308,6 +1395,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 568,
             "message": "untrusted input reaches requests.put() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:568:ssrf",
             "label": "unlabelled"
           },
@@ -1316,6 +1404,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 583,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:583:ssrf",
             "label": "unlabelled"
           },
@@ -1324,6 +1413,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 594,
             "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:594:ssrf",
             "label": "unlabelled"
           },
@@ -1332,6 +1422,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 610,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:610:ssrf",
             "label": "unlabelled"
           },
@@ -1340,6 +1431,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 622,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:622:ssrf",
             "label": "unlabelled"
           },
@@ -1348,6 +1440,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 635,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:635:ssrf",
             "label": "unlabelled"
           },
@@ -1356,6 +1449,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 649,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:649:ssrf",
             "label": "unlabelled"
           },
@@ -1364,6 +1458,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 664,
             "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:664:ssrf",
             "label": "unlabelled"
           },
@@ -1372,6 +1467,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 690,
             "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:690:ssrf",
             "label": "unlabelled"
           },
@@ -1380,6 +1476,7 @@
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 703,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:703:ssrf",
             "label": "unlabelled"
           },
@@ -1388,6 +1485,7 @@
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 405,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/views.py:405:ssrf",
             "label": "unlabelled"
           },
@@ -1396,6 +1494,7 @@
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 495,
             "message": "untrusted input reaches requests.put() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/views.py:495:ssrf",
             "label": "unlabelled"
           },
@@ -1404,6 +1503,7 @@
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 597,
             "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/views.py:597:ssrf",
             "label": "unlabelled"
           },
@@ -1412,6 +1512,7 @@
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 663,
             "message": "untrusted input reaches requests.put() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/views.py:663:ssrf",
             "label": "unlabelled"
           },
@@ -1420,6 +1521,7 @@
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 753,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/views.py:753:path-traversal",
             "label": "unlabelled"
           },
@@ -1428,6 +1530,7 @@
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 799,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/views.py:799:path-traversal",
             "label": "unlabelled"
           },
@@ -1436,6 +1539,7 @@
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 866,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/views.py:866:path-traversal",
             "label": "unlabelled"
           },
@@ -1444,6 +1548,7 @@
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 871,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/views.py:871:path-traversal",
             "label": "unlabelled"
           },
@@ -1452,6 +1557,7 @@
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 875,
             "message": "untrusted input reaches requests.put() argument 'url'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/views.py:875:ssrf",
             "label": "unlabelled"
           },
@@ -1460,8 +1566,18 @@
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 1171,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "orchest:services/orchest-webserver/app/app/views/views.py:1171:path-traversal",
             "label": "unlabelled"
+          }
+        ],
+        "low_confidence": [
+          {
+            "rule": "path-traversal",
+            "file": "lib/python/orchest-internals/_orchest/internals/utils.py",
+            "line": 127,
+            "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.filemanager_upload (/services/orchest-webserver/app/app/views/views.py:1124)",
+            "confidence": "low"
           }
         ]
       },
@@ -1471,238 +1587,279 @@
         "skipped": 0,
         "findings": [
           {
-            "rule": "path-traversal",
-            "file": "lib/python/orchest-internals/_orchest/internals/utils.py",
-            "line": 127,
-            "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.filemanager_upload (/services/orchest-webserver/app/app/views/views.py:1154)"
-          },
-          {
             "rule": "ssrf",
             "file": "services/auth-server/app/app/views.py",
             "line": 297,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/core/jobs.py",
             "line": 109,
-            "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_jobs_duplicate (/services/orchest-webserver/app/app/views/orchest_api.py:245)"
+            "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_jobs_duplicate (/services/orchest-webserver/app/app/views/orchest_api.py:245)",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/core/jobs.py",
             "line": 144,
-            "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_jobs_duplicate (/services/orchest-webserver/app/app/views/orchest_api.py:245)"
+            "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_jobs_duplicate (/services/orchest-webserver/app/app/views/orchest_api.py:245)",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/core/jobs.py",
             "line": 148,
-            "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_jobs_duplicate (/services/orchest-webserver/app/app/views/orchest_api.py:245)"
+            "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_jobs_duplicate (/services/orchest-webserver/app/app/views/orchest_api.py:245)",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/utils.py",
             "line": 347,
-            "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.views.file_viewer (/services/orchest-webserver/app/app/views/views.py:753)"
+            "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.views.file_viewer (/services/orchest-webserver/app/app/views/views.py:753)",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "services/orchest-webserver/app/app/utils.py",
             "line": 638,
-            "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.pipelines_json (/services/orchest-webserver/app/app/views/views.py:881)"
+            "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.pipelines_json (/services/orchest-webserver/app/app/views/views.py:881)",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "services/orchest-webserver/app/app/utils.py",
             "line": 691,
-            "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.pipelines_json (/services/orchest-webserver/app/app/views/views.py:881)"
+            "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.pipelines_json (/services/orchest-webserver/app/app/views/views.py:881)",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 69,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 89,
-            "message": "untrusted input reaches requests.delete() argument 'url'"
+            "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 113,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 161,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 179,
-            "message": "untrusted input reaches requests.delete() argument 'url'"
+            "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 301,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 316,
-            "message": "untrusted input reaches requests.delete() argument 'url'"
+            "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 391,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 428,
-            "message": "untrusted input reaches requests.put() argument 'url'"
+            "message": "untrusted input reaches requests.put() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 492,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 506,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 516,
-            "message": "untrusted input reaches requests.delete() argument 'url'"
+            "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 532,
-            "message": "untrusted input reaches requests.delete() argument 'url'"
+            "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 542,
-            "message": "untrusted input reaches requests.post() argument 'url'"
+            "message": "untrusted input reaches requests.post() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 554,
-            "message": "untrusted input reaches requests.post() argument 'url'"
+            "message": "untrusted input reaches requests.post() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 568,
-            "message": "untrusted input reaches requests.put() argument 'url'"
+            "message": "untrusted input reaches requests.put() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 583,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 594,
-            "message": "untrusted input reaches requests.delete() argument 'url'"
+            "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 610,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 622,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 635,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 649,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 664,
-            "message": "untrusted input reaches requests.delete() argument 'url'"
+            "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 690,
-            "message": "untrusted input reaches requests.delete() argument 'url'"
+            "message": "untrusted input reaches requests.delete() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/orchest_api.py",
             "line": 703,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 408,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 498,
-            "message": "untrusted input reaches requests.put() argument 'url'"
+            "message": "untrusted input reaches requests.put() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 605,
-            "message": "untrusted input reaches requests.get() argument 'url'"
+            "message": "untrusted input reaches requests.get() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 671,
-            "message": "untrusted input reaches requests.put() argument 'url'"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "services/orchest-webserver/app/app/views/views.py",
-            "line": 812,
-            "message": "untrusted input reaches open() argument 'file'"
+            "message": "untrusted input reaches requests.put() argument 'url'",
+            "confidence": "high"
           },
           {
             "rule": "ssrf",
             "file": "services/orchest-webserver/app/app/views/views.py",
             "line": 900,
-            "message": "untrusted input reaches requests.put() argument 'url'"
+            "message": "untrusted input reaches requests.put() argument 'url'",
+            "confidence": "high"
+          }
+        ],
+        "low_confidence": [
+          {
+            "rule": "path-traversal",
+            "file": "lib/python/orchest-internals/_orchest/internals/utils.py",
+            "line": 127,
+            "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.filemanager_upload (/services/orchest-webserver/app/app/views/views.py:1154)",
+            "confidence": "low"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "services/orchest-webserver/app/app/views/views.py",
+            "line": 812,
+            "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "low"
           }
         ]
       },
@@ -1759,6 +1916,7 @@
               "file": "services/orchest-webserver/app/app/utils.py",
               "line": 194,
               "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.EnvironmentResource.post (/services/orchest-webserver/app/app/views/views.py:144)",
+              "confidence": "high",
               "key": "orchest:services/orchest-webserver/app/app/utils.py:194:path-traversal",
               "label": "unlabelled"
             },
@@ -1767,6 +1925,7 @@
               "file": "services/orchest-webserver/app/app/utils.py",
               "line": 206,
               "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.EnvironmentResource.post (/services/orchest-webserver/app/app/views/views.py:144)",
+              "confidence": "high",
               "key": "orchest:services/orchest-webserver/app/app/utils.py:206:path-traversal",
               "label": "unlabelled"
             },
@@ -1775,6 +1934,7 @@
               "file": "services/orchest-webserver/app/app/utils.py",
               "line": 215,
               "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_environment_image_builds (/services/orchest-webserver/app/app/views/orchest_api.py:140)",
+              "confidence": "high",
               "key": "orchest:services/orchest-webserver/app/app/utils.py:215:path-traversal",
               "label": "unlabelled"
             },
@@ -1783,6 +1943,7 @@
               "file": "services/orchest-webserver/app/app/utils.py",
               "line": 218,
               "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_environment_image_builds (/services/orchest-webserver/app/app/views/orchest_api.py:140)",
+              "confidence": "high",
               "key": "orchest:services/orchest-webserver/app/app/utils.py:218:path-traversal",
               "label": "unlabelled"
             },
@@ -1791,15 +1952,8 @@
               "file": "services/orchest-webserver/app/app/utils.py",
               "line": 285,
               "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_sessions_post (/services/orchest-webserver/app/app/views/orchest_api.py:355)",
+              "confidence": "high",
               "key": "orchest:services/orchest-webserver/app/app/utils.py:285:path-traversal",
-              "label": "unlabelled"
-            },
-            {
-              "rule": "path-traversal",
-              "file": "services/orchest-webserver/app/app/utils.py",
-              "line": 551,
-              "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.pipelines_json (/services/orchest-webserver/app/app/views/views.py:856)",
-              "key": "orchest:services/orchest-webserver/app/app/utils.py:551:path-traversal",
               "label": "unlabelled"
             },
             {
@@ -1807,6 +1961,7 @@
               "file": "services/orchest-webserver/app/app/utils.py",
               "line": 600,
               "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.filemanager_create (/services/orchest-webserver/app/app/views/views.py:964)",
+              "confidence": "high",
               "key": "orchest:services/orchest-webserver/app/app/utils.py:600:path-traversal",
               "label": "unlabelled"
             },
@@ -1815,6 +1970,7 @@
               "file": "services/orchest-webserver/app/app/utils.py",
               "line": 636,
               "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.pipelines_json (/services/orchest-webserver/app/app/views/views.py:856)",
+              "confidence": "high",
               "key": "orchest:services/orchest-webserver/app/app/utils.py:636:path-traversal",
               "label": "unlabelled"
             },
@@ -1823,6 +1979,7 @@
               "file": "services/orchest-webserver/app/app/utils.py",
               "line": 689,
               "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.pipelines_json (/services/orchest-webserver/app/app/views/views.py:856)",
+              "confidence": "high",
               "key": "orchest:services/orchest-webserver/app/app/utils.py:689:path-traversal",
               "label": "unlabelled"
             },
@@ -1831,6 +1988,7 @@
               "file": "services/orchest-webserver/app/app/views/views.py",
               "line": 753,
               "message": "untrusted input reaches open() argument 'file'",
+              "confidence": "high",
               "key": "orchest:services/orchest-webserver/app/app/views/views.py:753:path-traversal",
               "label": "unlabelled"
             },
@@ -1839,6 +1997,7 @@
               "file": "services/orchest-webserver/app/app/views/views.py",
               "line": 799,
               "message": "untrusted input reaches open() argument 'file'",
+              "confidence": "high",
               "key": "orchest:services/orchest-webserver/app/app/views/views.py:799:path-traversal",
               "label": "unlabelled"
             },
@@ -1847,6 +2006,7 @@
               "file": "services/orchest-webserver/app/app/views/views.py",
               "line": 866,
               "message": "untrusted input reaches open() argument 'file'",
+              "confidence": "high",
               "key": "orchest:services/orchest-webserver/app/app/views/views.py:866:path-traversal",
               "label": "unlabelled"
             },
@@ -1855,6 +2015,7 @@
               "file": "services/orchest-webserver/app/app/views/views.py",
               "line": 871,
               "message": "untrusted input reaches open() argument 'file'",
+              "confidence": "high",
               "key": "orchest:services/orchest-webserver/app/app/views/views.py:871:path-traversal",
               "label": "unlabelled"
             },
@@ -1863,6 +2024,7 @@
               "file": "services/orchest-webserver/app/app/views/views.py",
               "line": 1171,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "orchest:services/orchest-webserver/app/app/views/views.py:1171:path-traversal",
               "label": "unlabelled"
             }
@@ -1872,18 +2034,11 @@
       ],
       "other_findings": [
         {
-          "rule": "path-traversal",
-          "file": "lib/python/orchest-internals/_orchest/internals/utils.py",
-          "line": 127,
-          "message": "untrusted input reaches open() argument 'file', passed in by services.orchest-webserver.app.app.views.views.filemanager_upload (/services/orchest-webserver/app/app/views/views.py:1124)",
-          "key": "orchest:lib/python/orchest-internals/_orchest/internals/utils.py:127:path-traversal",
-          "label": "unlabelled"
-        },
-        {
           "rule": "ssrf",
           "file": "services/auth-server/app/app/views.py",
           "line": 297,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/auth-server/app/app/views.py:297:ssrf",
           "label": "unlabelled"
         },
@@ -1892,6 +2047,7 @@
           "file": "services/orchest-webserver/app/app/core/jobs.py",
           "line": 109,
           "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_jobs_duplicate (/services/orchest-webserver/app/app/views/orchest_api.py:245)",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/core/jobs.py:109:ssrf",
           "label": "unlabelled"
         },
@@ -1900,6 +2056,7 @@
           "file": "services/orchest-webserver/app/app/core/jobs.py",
           "line": 144,
           "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_jobs_duplicate (/services/orchest-webserver/app/app/views/orchest_api.py:245)",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/core/jobs.py:144:ssrf",
           "label": "unlabelled"
         },
@@ -1908,6 +2065,7 @@
           "file": "services/orchest-webserver/app/app/core/jobs.py",
           "line": 148,
           "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.orchest_api.catch_api_proxy_jobs_duplicate (/services/orchest-webserver/app/app/views/orchest_api.py:245)",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/core/jobs.py:148:ssrf",
           "label": "unlabelled"
         },
@@ -1916,6 +2074,7 @@
           "file": "services/orchest-webserver/app/app/utils.py",
           "line": 346,
           "message": "untrusted input reaches requests.get() argument 'url', passed in by services.orchest-webserver.app.app.views.views.file_viewer (/services/orchest-webserver/app/app/views/views.py:745)",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/utils.py:346:ssrf",
           "label": "unlabelled"
         },
@@ -1924,6 +2083,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 69,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:69:ssrf",
           "label": "unlabelled"
         },
@@ -1932,6 +2092,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 89,
           "message": "untrusted input reaches requests.delete() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:89:ssrf",
           "label": "unlabelled"
         },
@@ -1940,6 +2101,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 113,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:113:ssrf",
           "label": "unlabelled"
         },
@@ -1948,6 +2110,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 161,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:161:ssrf",
           "label": "unlabelled"
         },
@@ -1956,6 +2119,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 179,
           "message": "untrusted input reaches requests.delete() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:179:ssrf",
           "label": "unlabelled"
         },
@@ -1964,6 +2128,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 301,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:301:ssrf",
           "label": "unlabelled"
         },
@@ -1972,6 +2137,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 316,
           "message": "untrusted input reaches requests.delete() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:316:ssrf",
           "label": "unlabelled"
         },
@@ -1980,6 +2146,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 391,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:391:ssrf",
           "label": "unlabelled"
         },
@@ -1988,6 +2155,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 428,
           "message": "untrusted input reaches requests.put() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:428:ssrf",
           "label": "unlabelled"
         },
@@ -1996,6 +2164,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 492,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:492:ssrf",
           "label": "unlabelled"
         },
@@ -2004,6 +2173,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 506,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:506:ssrf",
           "label": "unlabelled"
         },
@@ -2012,6 +2182,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 516,
           "message": "untrusted input reaches requests.delete() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:516:ssrf",
           "label": "unlabelled"
         },
@@ -2020,6 +2191,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 532,
           "message": "untrusted input reaches requests.delete() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:532:ssrf",
           "label": "unlabelled"
         },
@@ -2028,6 +2200,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 542,
           "message": "untrusted input reaches requests.post() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:542:ssrf",
           "label": "unlabelled"
         },
@@ -2036,6 +2209,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 554,
           "message": "untrusted input reaches requests.post() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:554:ssrf",
           "label": "unlabelled"
         },
@@ -2044,6 +2218,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 568,
           "message": "untrusted input reaches requests.put() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:568:ssrf",
           "label": "unlabelled"
         },
@@ -2052,6 +2227,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 583,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:583:ssrf",
           "label": "unlabelled"
         },
@@ -2060,6 +2236,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 594,
           "message": "untrusted input reaches requests.delete() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:594:ssrf",
           "label": "unlabelled"
         },
@@ -2068,6 +2245,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 610,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:610:ssrf",
           "label": "unlabelled"
         },
@@ -2076,6 +2254,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 622,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:622:ssrf",
           "label": "unlabelled"
         },
@@ -2084,6 +2263,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 635,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:635:ssrf",
           "label": "unlabelled"
         },
@@ -2092,6 +2272,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 649,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:649:ssrf",
           "label": "unlabelled"
         },
@@ -2100,6 +2281,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 664,
           "message": "untrusted input reaches requests.delete() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:664:ssrf",
           "label": "unlabelled"
         },
@@ -2108,6 +2290,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 690,
           "message": "untrusted input reaches requests.delete() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:690:ssrf",
           "label": "unlabelled"
         },
@@ -2116,6 +2299,7 @@
           "file": "services/orchest-webserver/app/app/views/orchest_api.py",
           "line": 703,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/orchest_api.py:703:ssrf",
           "label": "unlabelled"
         },
@@ -2124,6 +2308,7 @@
           "file": "services/orchest-webserver/app/app/views/views.py",
           "line": 405,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/views.py:405:ssrf",
           "label": "unlabelled"
         },
@@ -2132,6 +2317,7 @@
           "file": "services/orchest-webserver/app/app/views/views.py",
           "line": 495,
           "message": "untrusted input reaches requests.put() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/views.py:495:ssrf",
           "label": "unlabelled"
         },
@@ -2140,6 +2326,7 @@
           "file": "services/orchest-webserver/app/app/views/views.py",
           "line": 597,
           "message": "untrusted input reaches requests.get() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/views.py:597:ssrf",
           "label": "unlabelled"
         },
@@ -2148,6 +2335,7 @@
           "file": "services/orchest-webserver/app/app/views/views.py",
           "line": 663,
           "message": "untrusted input reaches requests.put() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/views.py:663:ssrf",
           "label": "unlabelled"
         },
@@ -2156,6 +2344,7 @@
           "file": "services/orchest-webserver/app/app/views/views.py",
           "line": 875,
           "message": "untrusted input reaches requests.put() argument 'url'",
+          "confidence": "high",
           "key": "orchest:services/orchest-webserver/app/app/views/views.py:875:ssrf",
           "label": "unlabelled"
         }
@@ -2175,6 +2364,7 @@
             "file": "ganga/GangaGUI/gui/routes.py",
             "line": 671,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "ganga:ganga/GangaGUI/gui/routes.py:671:path-traversal",
             "label": "tp"
           },
@@ -2183,6 +2373,7 @@
             "file": "ganga/GangaGUI/gui/routes.py",
             "line": 676,
             "message": "untrusted input reaches os.listdir() argument 'path'",
+            "confidence": "high",
             "key": "ganga:ganga/GangaGUI/gui/routes.py:676:path-traversal",
             "label": "tp"
           },
@@ -2191,6 +2382,7 @@
             "file": "ganga/GangaGUI/gui/routes.py",
             "line": 975,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "ganga:ganga/GangaGUI/gui/routes.py:975:path-traversal",
             "label": "unlabelled"
           },
@@ -2199,10 +2391,12 @@
             "file": "ganga/GangaGUI/gui/routes.py",
             "line": 980,
             "message": "untrusted input reaches os.listdir() argument 'path'",
+            "confidence": "high",
             "key": "ganga:ganga/GangaGUI/gui/routes.py:980:path-traversal",
             "label": "unlabelled"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "fixed": {
         "commit": "730e7aba192407d35eb37dd7938d49071124be8c",
@@ -2213,15 +2407,18 @@
             "rule": "path-traversal",
             "file": "ganga/GangaGUI/gui/routes.py",
             "line": 975,
-            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'"
+            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high"
           },
           {
             "rule": "path-traversal",
             "file": "ganga/GangaGUI/gui/routes.py",
             "line": 980,
-            "message": "untrusted input reaches os.listdir() argument 'path'"
+            "message": "untrusted input reaches os.listdir() argument 'path'",
+            "confidence": "high"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "cves": [
         {
@@ -2238,6 +2435,7 @@
               "file": "ganga/GangaGUI/gui/routes.py",
               "line": 671,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "ganga:ganga/GangaGUI/gui/routes.py:671:path-traversal",
               "label": "tp"
             },
@@ -2246,6 +2444,7 @@
               "file": "ganga/GangaGUI/gui/routes.py",
               "line": 676,
               "message": "untrusted input reaches os.listdir() argument 'path'",
+              "confidence": "high",
               "key": "ganga:ganga/GangaGUI/gui/routes.py:676:path-traversal",
               "label": "tp"
             },
@@ -2254,6 +2453,7 @@
               "file": "ganga/GangaGUI/gui/routes.py",
               "line": 975,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "ganga:ganga/GangaGUI/gui/routes.py:975:path-traversal",
               "label": "unlabelled"
             },
@@ -2262,6 +2462,7 @@
               "file": "ganga/GangaGUI/gui/routes.py",
               "line": 980,
               "message": "untrusted input reaches os.listdir() argument 'path'",
+              "confidence": "high",
               "key": "ganga:ganga/GangaGUI/gui/routes.py:980:path-traversal",
               "label": "unlabelled"
             }
@@ -2285,6 +2486,7 @@
             "file": "app/helper/middleware.py",
             "line": 23,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "evoting:app/helper/middleware.py:23:path-traversal",
             "label": "tp"
           },
@@ -2293,10 +2495,12 @@
             "file": "app/module/candidate/__init__.py",
             "line": 96,
             "message": "untrusted input reaches os.remove() argument 'path', passed in by app.module.candidate.route.detail (/app/module/candidate/route.py:129)",
+            "confidence": "high",
             "key": "evoting:app/module/candidate/__init__.py:96:path-traversal",
             "label": "unlabelled"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "fixed": {
         "commit": "241d92a4d68f524365a6322b5bbcfaa7d9abc8a3",
@@ -2307,9 +2511,11 @@
             "rule": "path-traversal",
             "file": "app/module/candidate/__init__.py",
             "line": 96,
-            "message": "untrusted input reaches os.remove() argument 'path', passed in by app.module.candidate.route.detail (/app/module/candidate/route.py:129)"
+            "message": "untrusted input reaches os.remove() argument 'path', passed in by app.module.candidate.route.detail (/app/module/candidate/route.py:129)",
+            "confidence": "high"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "cves": [
         {
@@ -2326,6 +2532,7 @@
               "file": "app/helper/middleware.py",
               "line": 23,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "evoting:app/helper/middleware.py:23:path-traversal",
               "label": "tp"
             }
@@ -2339,6 +2546,7 @@
           "file": "app/module/candidate/__init__.py",
           "line": 96,
           "message": "untrusted input reaches os.remove() argument 'path', passed in by app.module.candidate.route.detail (/app/module/candidate/route.py:129)",
+          "confidence": "high",
           "key": "evoting:app/module/candidate/__init__.py:96:path-traversal",
           "label": "unlabelled"
         }
@@ -2358,10 +2566,12 @@
             "file": "app.py",
             "line": 127,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "CarceresBE:app.py:127:path-traversal",
             "label": "tp"
           }
-        ]
+        ],
+        "low_confidence": []
       },
       "fixed": null,
       "cves": [
@@ -2379,6 +2589,7 @@
               "file": "app.py",
               "line": 127,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "CarceresBE:app.py:127:path-traversal",
               "label": "tp"
             }
@@ -2399,25 +2610,10 @@
         "findings": [
           {
             "rule": "path-traversal",
-            "file": "app/backend/core/datasets/dbimageinfo.py",
-            "line": 176,
-            "message": "untrusted input reaches open() argument 'file', passed in by app.backend.dataset.api.data_set_img_preview (/app/backend/dataset/api.py:45)",
-            "key": "dls:app/backend/core/datasets/dbimageinfo.py:176:path-traversal",
-            "label": "unlabelled"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "app/backend/core/datasets/dbimageinfo.py",
-            "line": 179,
-            "message": "untrusted input reaches open() argument 'file', passed in by app.backend.dataset.api.data_set_img_mean (/app/backend/dataset/api.py:55)",
-            "key": "dls:app/backend/core/datasets/dbimageinfo.py:179:path-traversal",
-            "label": "unlabelled"
-          },
-          {
-            "rule": "path-traversal",
             "file": "app/backend/core/datasets/dbwatcher.py",
             "line": 84,
             "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by app.backend.dataset.api.delete (/app/backend/dataset/api.py:84)",
+            "confidence": "high",
             "key": "dls:app/backend/core/datasets/dbwatcher.py:84:path-traversal",
             "label": "unlabelled"
           },
@@ -2426,6 +2622,7 @@
             "file": "app/backend/network/api.py",
             "line": 40,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "dls:app/backend/network/api.py:40:path-traversal",
             "label": "unlabelled"
           },
@@ -2434,6 +2631,7 @@
             "file": "app/backend/network/api.py",
             "line": 50,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "dls:app/backend/network/api.py:50:path-traversal",
             "label": "unlabelled"
           },
@@ -2442,6 +2640,7 @@
             "file": "app/backend/network/api.py",
             "line": 63,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "dls:app/backend/network/api.py:63:path-traversal",
             "label": "unlabelled"
           },
@@ -2450,6 +2649,7 @@
             "file": "app/backend/network/api.py",
             "line": 76,
             "message": "untrusted input reaches os.remove() argument 'path'",
+            "confidence": "high",
             "key": "dls:app/backend/network/api.py:76:path-traversal",
             "label": "unlabelled"
           },
@@ -2458,6 +2658,7 @@
             "file": "app/backend/task/api.py",
             "line": 44,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "dls:app/backend/task/api.py:44:path-traversal",
             "label": "unlabelled"
           },
@@ -2466,8 +2667,25 @@
             "file": "app/backend/util/api.py",
             "line": 11,
             "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "high",
             "key": "dls:app/backend/util/api.py:11:path-traversal",
             "label": "unlabelled"
+          }
+        ],
+        "low_confidence": [
+          {
+            "rule": "path-traversal",
+            "file": "app/backend/core/datasets/dbimageinfo.py",
+            "line": 176,
+            "message": "untrusted input reaches open() argument 'file', passed in by app.backend.dataset.api.data_set_img_preview (/app/backend/dataset/api.py:45)",
+            "confidence": "low"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "app/backend/core/datasets/dbimageinfo.py",
+            "line": 179,
+            "message": "untrusted input reaches open() argument 'file', passed in by app.backend.dataset.api.data_set_img_mean (/app/backend/dataset/api.py:55)",
+            "confidence": "low"
           }
         ]
       },
@@ -2488,25 +2706,10 @@
       "other_findings": [
         {
           "rule": "path-traversal",
-          "file": "app/backend/core/datasets/dbimageinfo.py",
-          "line": 176,
-          "message": "untrusted input reaches open() argument 'file', passed in by app.backend.dataset.api.data_set_img_preview (/app/backend/dataset/api.py:45)",
-          "key": "dls:app/backend/core/datasets/dbimageinfo.py:176:path-traversal",
-          "label": "unlabelled"
-        },
-        {
-          "rule": "path-traversal",
-          "file": "app/backend/core/datasets/dbimageinfo.py",
-          "line": 179,
-          "message": "untrusted input reaches open() argument 'file', passed in by app.backend.dataset.api.data_set_img_mean (/app/backend/dataset/api.py:55)",
-          "key": "dls:app/backend/core/datasets/dbimageinfo.py:179:path-traversal",
-          "label": "unlabelled"
-        },
-        {
-          "rule": "path-traversal",
           "file": "app/backend/core/datasets/dbwatcher.py",
           "line": 84,
           "message": "untrusted input reaches shutil.rmtree() argument 'path', passed in by app.backend.dataset.api.delete (/app/backend/dataset/api.py:84)",
+          "confidence": "high",
           "key": "dls:app/backend/core/datasets/dbwatcher.py:84:path-traversal",
           "label": "unlabelled"
         },
@@ -2515,6 +2718,7 @@
           "file": "app/backend/network/api.py",
           "line": 40,
           "message": "untrusted input reaches open() argument 'file'",
+          "confidence": "high",
           "key": "dls:app/backend/network/api.py:40:path-traversal",
           "label": "unlabelled"
         },
@@ -2523,6 +2727,7 @@
           "file": "app/backend/network/api.py",
           "line": 50,
           "message": "untrusted input reaches open() argument 'file'",
+          "confidence": "high",
           "key": "dls:app/backend/network/api.py:50:path-traversal",
           "label": "unlabelled"
         },
@@ -2531,6 +2736,7 @@
           "file": "app/backend/network/api.py",
           "line": 63,
           "message": "untrusted input reaches open() argument 'file'",
+          "confidence": "high",
           "key": "dls:app/backend/network/api.py:63:path-traversal",
           "label": "unlabelled"
         },
@@ -2539,6 +2745,7 @@
           "file": "app/backend/network/api.py",
           "line": 76,
           "message": "untrusted input reaches os.remove() argument 'path'",
+          "confidence": "high",
           "key": "dls:app/backend/network/api.py:76:path-traversal",
           "label": "unlabelled"
         },
@@ -2547,6 +2754,7 @@
           "file": "app/backend/task/api.py",
           "line": 44,
           "message": "untrusted input reaches open() argument 'file'",
+          "confidence": "high",
           "key": "dls:app/backend/task/api.py:44:path-traversal",
           "label": "unlabelled"
         },
@@ -2555,6 +2763,7 @@
           "file": "app/backend/util/api.py",
           "line": 11,
           "message": "untrusted input reaches open() argument 'file'",
+          "confidence": "high",
           "key": "dls:app/backend/util/api.py:11:path-traversal",
           "label": "unlabelled"
         }
@@ -2570,34 +2779,11 @@
         "skipped": 5,
         "findings": [
           {
-            "rule": "ssrf",
-            "file": "csmserver/cisco_service/bug_service.py",
-            "line": 46,
-            "message": "untrusted input reaches requests.get() argument 'url', passed in by csmserver.views.cco.api_get_ddts_details (/csmserver/views/cco.py:198)",
-            "key": "csm:csmserver/cisco_service/bug_service.py:46:ssrf",
-            "label": "unlabelled"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "csmserver/views/cco.py",
-            "line": 347,
-            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
-            "key": "csm:csmserver/views/cco.py:347:path-traversal",
-            "label": "unlabelled"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "csmserver/views/conformance.py",
-            "line": 564,
-            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
-            "key": "csm:csmserver/views/conformance.py:564:path-traversal",
-            "label": "unlabelled"
-          },
-          {
             "rule": "path-traversal",
             "file": "csmserver/views/download_dashboard.py",
             "line": 141,
             "message": "untrusted input reaches os.remove() argument 'path'",
+            "confidence": "high",
             "key": "csm:csmserver/views/download_dashboard.py:141:path-traversal",
             "label": "unlabelled"
           },
@@ -2606,6 +2792,7 @@
             "file": "csmserver/views/download_dashboard.py",
             "line": 152,
             "message": "untrusted input reaches os.remove() argument 'path'",
+            "confidence": "high",
             "key": "csm:csmserver/views/download_dashboard.py:152:path-traversal",
             "label": "unlabelled"
           },
@@ -2614,23 +2801,8 @@
             "file": "csmserver/views/download_dashboard.py",
             "line": 157,
             "message": "untrusted input reaches os.remove() argument 'path'",
+            "confidence": "high",
             "key": "csm:csmserver/views/download_dashboard.py:157:path-traversal",
-            "label": "unlabelled"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "csmserver/views/inventory.py",
-            "line": 453,
-            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
-            "key": "csm:csmserver/views/inventory.py:453:path-traversal",
-            "label": "unlabelled"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "csmserver/views/inventory.py",
-            "line": 531,
-            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
-            "key": "csm:csmserver/views/inventory.py:531:path-traversal",
             "label": "unlabelled"
           },
           {
@@ -2638,6 +2810,7 @@
             "file": "csmserver/views/log.py",
             "line": 138,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "csm:csmserver/views/log.py:138:path-traversal",
             "label": "tp"
           },
@@ -2646,6 +2819,7 @@
             "file": "csmserver/views/log.py",
             "line": 157,
             "message": "untrusted input reaches io.open() argument 'file'",
+            "confidence": "high",
             "key": "csm:csmserver/views/log.py:157:path-traversal",
             "label": "unlabelled"
           },
@@ -2654,6 +2828,7 @@
             "file": "csmserver/views/log.py",
             "line": 212,
             "message": "untrusted input reaches io.open() argument 'file'",
+            "confidence": "high",
             "key": "csm:csmserver/views/log.py:212:path-traversal",
             "label": "unlabelled"
           },
@@ -2662,8 +2837,60 @@
             "file": "csmserver/views/log.py",
             "line": 284,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "high",
             "key": "csm:csmserver/views/log.py:284:path-traversal",
             "label": "unlabelled"
+          }
+        ],
+        "low_confidence": [
+          {
+            "rule": "ssrf",
+            "file": "csmserver/cisco_service/bug_service.py",
+            "line": 46,
+            "message": "untrusted input reaches requests.get() argument 'url', passed in by csmserver.views.cco.api_get_ddts_details (/csmserver/views/cco.py:198)",
+            "confidence": "low"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "csmserver/report_writer.py",
+            "line": 670,
+            "message": "untrusted input reaches open() argument 'file', passed in by csmserver.views.inventory.export_inventory_information (/csmserver/views/inventory.py:440)",
+            "confidence": "low"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "csmserver/report_writer.py",
+            "line": 1032,
+            "message": "untrusted input reaches open() argument 'file', passed in by csmserver.views.inventory.export_inventory_dashboard (/csmserver/views/inventory.py:523)",
+            "confidence": "low"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "csmserver/views/cco.py",
+            "line": 347,
+            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "low"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "csmserver/views/conformance.py",
+            "line": 564,
+            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "low"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "csmserver/views/inventory.py",
+            "line": 453,
+            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "low"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "csmserver/views/inventory.py",
+            "line": 531,
+            "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+            "confidence": "low"
           }
         ]
       },
@@ -2683,6 +2910,7 @@
               "file": "csmserver/views/log.py",
               "line": 138,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "csm:csmserver/views/log.py:138:path-traversal",
               "label": "tp"
             },
@@ -2691,6 +2919,7 @@
               "file": "csmserver/views/log.py",
               "line": 157,
               "message": "untrusted input reaches io.open() argument 'file'",
+              "confidence": "high",
               "key": "csm:csmserver/views/log.py:157:path-traversal",
               "label": "unlabelled"
             },
@@ -2699,6 +2928,7 @@
               "file": "csmserver/views/log.py",
               "line": 212,
               "message": "untrusted input reaches io.open() argument 'file'",
+              "confidence": "high",
               "key": "csm:csmserver/views/log.py:212:path-traversal",
               "label": "unlabelled"
             },
@@ -2707,6 +2937,7 @@
               "file": "csmserver/views/log.py",
               "line": 284,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
+              "confidence": "high",
               "key": "csm:csmserver/views/log.py:284:path-traversal",
               "label": "unlabelled"
             }
@@ -2716,34 +2947,11 @@
       ],
       "other_findings": [
         {
-          "rule": "ssrf",
-          "file": "csmserver/cisco_service/bug_service.py",
-          "line": 46,
-          "message": "untrusted input reaches requests.get() argument 'url', passed in by csmserver.views.cco.api_get_ddts_details (/csmserver/views/cco.py:198)",
-          "key": "csm:csmserver/cisco_service/bug_service.py:46:ssrf",
-          "label": "unlabelled"
-        },
-        {
-          "rule": "path-traversal",
-          "file": "csmserver/views/cco.py",
-          "line": 347,
-          "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
-          "key": "csm:csmserver/views/cco.py:347:path-traversal",
-          "label": "unlabelled"
-        },
-        {
-          "rule": "path-traversal",
-          "file": "csmserver/views/conformance.py",
-          "line": 564,
-          "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
-          "key": "csm:csmserver/views/conformance.py:564:path-traversal",
-          "label": "unlabelled"
-        },
-        {
           "rule": "path-traversal",
           "file": "csmserver/views/download_dashboard.py",
           "line": 141,
           "message": "untrusted input reaches os.remove() argument 'path'",
+          "confidence": "high",
           "key": "csm:csmserver/views/download_dashboard.py:141:path-traversal",
           "label": "unlabelled"
         },
@@ -2752,6 +2960,7 @@
           "file": "csmserver/views/download_dashboard.py",
           "line": 152,
           "message": "untrusted input reaches os.remove() argument 'path'",
+          "confidence": "high",
           "key": "csm:csmserver/views/download_dashboard.py:152:path-traversal",
           "label": "unlabelled"
         },
@@ -2760,23 +2969,8 @@
           "file": "csmserver/views/download_dashboard.py",
           "line": 157,
           "message": "untrusted input reaches os.remove() argument 'path'",
+          "confidence": "high",
           "key": "csm:csmserver/views/download_dashboard.py:157:path-traversal",
-          "label": "unlabelled"
-        },
-        {
-          "rule": "path-traversal",
-          "file": "csmserver/views/inventory.py",
-          "line": 453,
-          "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
-          "key": "csm:csmserver/views/inventory.py:453:path-traversal",
-          "label": "unlabelled"
-        },
-        {
-          "rule": "path-traversal",
-          "file": "csmserver/views/inventory.py",
-          "line": 531,
-          "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
-          "key": "csm:csmserver/views/inventory.py:531:path-traversal",
           "label": "unlabelled"
         }
       ]
@@ -2789,7 +2983,8 @@
         "commit": "f91b0c65289a0c5d4b499ccc17997455f9cc3e89",
         "files": 15,
         "skipped": 2,
-        "findings": []
+        "findings": [],
+        "low_confidence": []
       },
       "fixed": null,
       "cves": [

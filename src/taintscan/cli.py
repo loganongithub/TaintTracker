@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from taintscan.engine import Project
+from taintscan.finding import HIGH
 
 
 def main(argv=None) -> int:
@@ -16,6 +17,7 @@ def main(argv=None) -> int:
     commands = parser.add_subparsers(dest="command", required=True)
     scan = commands.add_parser("scan", help="scan a file or directory")
     scan.add_argument("path", type=Path)
+    scan.add_argument("--low", action="store_true", help="also show low-confidence findings")
     bench = commands.add_parser("benchmark", help="measure against known CVEs")
     bench.add_argument("directory", type=Path, nargs="?", default=Path("benchmarks"))
     args = parser.parse_args(argv)
@@ -37,10 +39,15 @@ def main(argv=None) -> int:
 
     for file, reason in project.skipped:
         print(f"skipped {file}: {reason}", file=sys.stderr)
-    for finding in findings:
-        print(f"{finding.file}:{finding.line}: {finding.rule}: {finding.message}")
-    print(f"{len(findings)} finding(s) in {len(project.modules)} file(s)")
-    return 1 if findings else 0
+    high = [f for f in findings if f.confidence == HIGH]
+    low = [f for f in findings if f.confidence != HIGH]
+    for finding in high + (low if args.low else []):
+        tag = "" if finding.confidence == HIGH else " [low confidence]"
+        print(f"{finding.file}:{finding.line}: {finding.rule}{tag}: {finding.message}")
+    print(f"{len(high)} finding(s) in {len(project.modules)} file(s)")
+    if low and not args.low:
+        print(f"{len(low)} low-confidence finding(s) hidden; add --low to show them")
+    return 1 if high else 0
 
 
 if __name__ == "__main__":

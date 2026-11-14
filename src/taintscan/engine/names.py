@@ -12,12 +12,12 @@ class ImportMap:
         # Names bound by a plain `import x`: these are modules for certain,
         # so `x.f()` is a function call, never a method call on an object.
         self.imported_modules: set[str] = set()
-        # Functions defined at the top of this module: `helper` means
-        # "<this module>.helper".
+        # Functions and classes defined at the top of this module: `helper`
+        # means "<this module>.helper".
         self.local = {
             node.name
             for node in tree.body
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
         }
 
         package = module.split(".") if module else []

@@ -16,6 +16,7 @@ class SinkHit:
     line: int
     sink: str  # e.g. "requests.get"
     argument: str  # e.g. "url"
+    weak: bool = False  # reached only by weak taint (see taint.py)
 
 
 @dataclass
@@ -38,6 +39,12 @@ class Module:
     file: str
     tree: ast.Module
     names: ImportMap
+
+
+@dataclass
+class Class:
+    name: str  # dotted, e.g. "shop.storage.Uploads"
+    bases: list[str]  # dotted names of the base classes, as far as they resolve
 
 
 @dataclass

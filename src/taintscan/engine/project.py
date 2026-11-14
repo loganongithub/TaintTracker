@@ -12,12 +12,13 @@ import io
 import warnings
 from pathlib import Path
 
-from taintscan.engine.model import Function, Module, Summary
+from taintscan.engine.model import Class, Function, Module, Summary
 from taintscan.engine.names import ImportMap
 from taintscan.engine.routes import tainted_params
 from taintscan.engine.taint import FROM_SOURCE, from_param
 from taintscan.engine.tracker import Tracker
 from taintscan.finding import Finding
+from taintscan.rules import SINK_CLASSES
 
 SKIP_DIRS = {".venv", "venv", "env", ".git", "__pycache__", "node_modules", "site-packages"}
 MAX_ROUNDS = 10  # summaries only ever grow, so this is a safety cap
@@ -59,10 +60,17 @@ class Project:
         self.functions: dict[str, Function] = {}  # top-level functions, by dotted name
         self.every_function: list[Function] = []  # including methods and nested ones
         self.methods: dict[str, list[Function]] = {}  # methods, by bare method name
+        self.classes: dict[str, Class] = {}  # by dotted name
+        # Module-level `name = SomeClass()`: dotted variable name -> the
+        # dotted name that was called, e.g. "app.db" -> "app.models.Database".
+        self.instances: dict[str, str] = {}
         self.skipped: list[tuple[str, str]] = []  # (file, reason)
         self.findings: dict[tuple[str, str, int], Finding] = {}
+        self._top_level: set[str] = set()
         self._function_suffixes: dict[str, str | None] = {}
         self._module_suffixes: dict[str, str | None] = {}
+        self._class_suffixes: dict[str, str | None] = {}
+        self._instance_suffixes: dict[str, str | None] = {}
 
     # ---- loading ----------------------------------------------------
 
@@ -96,6 +104,18 @@ class Project:
             for member in node.body
         }
         for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                bases = [module.names.resolve(base) for base in node.bases]
+                self.classes[f"{name}.{node.name}"] = Class(
+                    f"{name}.{node.name}", [base for base in bases if base]
+                )
+        for node in tree.body:  # module-level `db = Database()`
+            if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
+                called = module.names.resolve(node.value.func)
+                for target in node.targets:
+                    if called and isinstance(target, ast.Name):
+                        self.instances[f"{name}.{target.id}"] = called
+        for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 owner = owners.get(id(node))
                 function = Function(f"{owner or name}.{node.name}", node, module, owner)
@@ -107,12 +127,14 @@ class Project:
 
     # ---- name lookup ------------------------------------------------
 
-    def lookup(self, name: str) -> Function | None:
-        """The project function a dotted name refers to, if there is one."""
+    def _find(self, name: str | None, table: dict, suffixes: dict) -> str | None:
+        """The key in `table` that a dotted name refers to, if there is one."""
         for _ in range(5):
-            full = name if name in self.functions else self._function_suffixes.get(name)
+            if not name:
+                return None
+            full = name if name in table else suffixes.get(name)
             if full:
-                return self.functions[full]
+                return full
             # Maybe a re-export: `from pkg import fetch` where pkg/__init__.py
             # has `from .client import fetch`. Follow that import.
             module_name, _, attribute = name.rpartition(".")
@@ -125,11 +147,40 @@ class Project:
             name = target
         return None
 
-    def method_of(self, owner: str, method: str) -> Function | None:
-        """`self.method()` inside class `owner`: the method that class defines."""
+    def lookup(self, name: str) -> Function | None:
+        """The project function a dotted name refers to, if there is one."""
+        full = self._find(name, self.functions, self._function_suffixes)
+        return self.functions[full] if full else None
+
+    def class_name(self, name: str | None) -> str | None:
+        """The class a dotted name refers to: a project class, or an outside
+        class whose methods are sinks (requests.Session)."""
+        if name in SINK_CLASSES:
+            return name
+        return self._find(name, self.classes, self._class_suffixes)
+
+    def instance_type(self, name: str | None) -> str | None:
+        """The class of a module-level object such as `db = Database()`."""
+        full = self._find(name, self.instances, self._instance_suffixes)
+        return self.class_name(self.instances[full]) if full else None
+
+    def is_internal(self, name: str) -> bool:
+        """True if a dotted name points into this project, not a library."""
+        first = name.split(".")[0]
+        return first in self._top_level or first in self._module_suffixes
+
+    def method_of(self, owner: str, method: str, depth: int = 0) -> Function | None:
+        """The method `owner` (a class) uses for this name: its own, or the
+        nearest one inherited from a base class in the project."""
         for function in self.methods.get(method, []):
             if function.owner == owner:
                 return function
+        if depth < 5 and owner in self.classes:
+            for parent in self.classes[owner].bases:
+                parent = self._find(parent, self.classes, self._class_suffixes)
+                found = self.method_of(parent, method, depth + 1) if parent else None
+                if found is not None:
+                    return found
         return None
 
     def unique_method(self, method: str) -> Function | None:
@@ -146,6 +197,9 @@ class Project:
     def run(self) -> list[Finding]:
         self._function_suffixes = _suffix_index(self.functions, min_parts=2)
         self._module_suffixes = _suffix_index(self.modules, min_parts=1)
+        self._class_suffixes = _suffix_index(self.classes, min_parts=2)
+        self._instance_suffixes = _suffix_index(self.instances, min_parts=2)
+        self._top_level = {name.split(".")[0] for name in self.modules}
 
         for _ in range(MAX_ROUNDS):
             changed = False

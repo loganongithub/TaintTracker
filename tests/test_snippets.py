@@ -4,6 +4,7 @@ Every test file declares what the engine should report in it on its first line:
 
     # expect: ssrf line 10
     # expect: path-traversal line 8, path-traversal line 13
+    # expect: low path-traversal line 9      (a low-confidence finding)
     # expect: none
 
 tests/snippets/ holds single files, each analyzed alone.
@@ -22,10 +23,10 @@ SNIPPETS = sorted((HERE / "snippets").rglob("*.py"))
 PROJECTS = sorted(p for p in (HERE / "projects").iterdir() if p.is_dir())
 
 EXPECT_LINE = re.compile(r"#\s*expect:\s*(.+)$")
-EXPECT_ITEM = re.compile(r"([\w-]+) line (\d+)$")
+EXPECT_ITEM = re.compile(r"(low )?([\w-]+) line (\d+)$")
 
 
-def expected_findings(path: Path) -> set[tuple[str, int]]:
+def expected_findings(path: Path) -> set[tuple[str, str, int]]:
     first_line = path.read_text(encoding="utf-8").splitlines()[0]
     match = EXPECT_LINE.match(first_line)
     if not match:
@@ -35,18 +36,18 @@ def expected_findings(path: Path) -> set[tuple[str, int]]:
     items = [EXPECT_ITEM.match(item.strip()) for item in match[1].split(",")]
     if not all(items):
         raise ValueError(f"{path}: cannot read '{first_line}'")
-    return {(item[1], int(item[2])) for item in items}
+    return {("low" if item[1] else "high", item[2], int(item[3])) for item in items}
 
 
 @pytest.mark.parametrize("path", SNIPPETS, ids=lambda p: p.stem)
 def test_snippet(path):
     findings = analyze(path.read_text(encoding="utf-8"), str(path))
-    assert {(f.rule, f.line) for f in findings} == expected_findings(path)
+    assert {(f.confidence, f.rule, f.line) for f in findings} == expected_findings(path)
 
 
 @pytest.mark.parametrize("root", PROJECTS, ids=lambda p: p.name)
 def test_project(root):
     findings = analyze_project(root)
     for path in sorted(root.rglob("*.py")):
-        got = {(f.rule, f.line) for f in findings if Path(f.file) == path}
+        got = {(f.confidence, f.rule, f.line) for f in findings if Path(f.file) == path}
         assert got == expected_findings(path), path.relative_to(root)
