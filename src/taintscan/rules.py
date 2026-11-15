@@ -54,6 +54,21 @@ SINKS: dict[str, tuple[str, int, str]] = {
 # such as "requests.Session.get".
 SINK_CLASSES = {*_HTTP_CLIENTS, "urllib3.PoolManager"}
 
+# Path classes. `Path(x).name` is the last component only, like basename.
+PATH_CLASSES = {"pathlib.Path", "pathlib.PurePath", "pathlib.PosixPath", "pathlib.WindowsPath"}
+PATH_LAST_COMPONENT = {"name", "stem", "suffix"}
+
+# Calls whose result carries the taint of one argument only:
+# name -> (positional index, keyword name). A Request object is as
+# dangerous as its URL; a tainted body or header does not make it one.
+CARRIERS: dict[str, tuple[int, str]] = {
+    "urllib.request.Request": (0, "url"),
+    "requests.Request": (1, "url"),
+}
+
+# Attributes that hold a database key, not content: `instance.id`.
+KEY_ATTRIBUTES = {"id", "pk"}
+
 # Methods that are a sink when called on a tainted value, whatever its type.
 # These names are specific to pathlib: Path(user_input).read_text().
 RECEIVER_SINKS: dict[str, str] = {
@@ -61,6 +76,12 @@ RECEIVER_SINKS: dict[str, str] = {
     "read_bytes": PATH_TRAVERSAL,
     "write_text": PATH_TRAVERSAL,
     "write_bytes": PATH_TRAVERSAL,
+}
+
+# Methods that write to the path they are given, when called on a tainted
+# object: request.files["f"].save(path). name -> (rule, index, keyword).
+UPLOAD_SINKS: dict[str, tuple[str, int, str]] = {
+    "save": (PATH_TRAVERSAL, 0, "dst"),
 }
 
 # Calls whose result is safe for every bug class.
@@ -79,6 +100,18 @@ SANITIZERS: dict[str, str] = {
     "io.StringIO": PATH_TRAVERSAL,
 }
 
+# The operating system picks most of a temporary file's path, but a tainted
+# prefix, suffix or dir argument still ends up in it. The result is weakly
+# tainted for path traversal, not clean: mkdtemp(prefix="../x") does escape.
+TEMPFILE_CALLS = {
+    "tempfile.NamedTemporaryFile",
+    "tempfile.TemporaryFile",
+    "tempfile.SpooledTemporaryFile",
+    "tempfile.TemporaryDirectory",
+    "tempfile.mkstemp",
+    "tempfile.mkdtemp",
+}
+
 # Calls that resolve a path. Their result can be checked with startswith().
 NORMALIZERS = {"os.path.realpath", "os.path.abspath", "os.path.normpath"}
 
@@ -87,6 +120,10 @@ EXIT_CALLS = {"flask.abort", "werkzeug.exceptions.abort", "abort", "sys.exit", "
 
 # Calls that test a string against a pattern.
 REGEX_CHECKS = {"re.match", "re.fullmatch"}
+
+# Text that, found inside a value, means it can leave its directory.
+# `if ".." in name or "/" in name: abort()` is a (partial) traversal check.
+TRAVERSAL_TEXT = {"/", "\\", "..", "../", "..\\"}
 
 # urlparse(url).netloc and friends: the part of a URL an allowlist should check.
 URL_PARSERS = {"urllib.parse.urlparse", "urllib.parse.urlsplit", "urlparse.urlparse"}

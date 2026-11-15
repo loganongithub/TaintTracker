@@ -13,9 +13,29 @@ from taintscan.engine.taint import CLEAN, Taint
 # not trust these (it cannot tell whether the check is any good); they only
 # lower a finding's rank.
 VALIDATOR_NAME = re.compile(
-    r"valid|sanitiz|sanitis|secure|safe|allowed|is_child|within|in_directory|whitelist|allowlist",
+    r"valid|sanitiz|sanitis|secure|safe|allowed|trusted|is_child|within|inside|in_directory"
+    r"|traversal|whitelist|allowlist",
     re.IGNORECASE,
 )
+# A narrower set: names that claim to make a path or URL safe. A value that
+# has been through one of these is downgraded to weak taint (a low-confidence
+# finding), never cleared. Deliberately excludes "allowed" and bare "valid":
+# `allowed_file(name)` checks the extension and says nothing about "../".
+SAFETY_NAME = re.compile(
+    r"safe|secure|sanitiz|sanitis|trusted|is_child|within|inside|traversal"
+    r"|validate_\w*(url|uri|path|host|file|dir)|(url|uri|path|host|file|dir)\w*_valid"
+    r"|is_valid_\w*(url|uri|path|host|file|dir)",
+    re.IGNORECASE,
+)
+# ...except these, which have "safe" in the name but hand back attacker content.
+NOT_SAFETY_NAME = re.compile(r"load|dump|substitute|eval|mark_safe|safe_str|safestring", re.IGNORECASE)
+# Code that is not part of the running application.
+TEST_CODE = re.compile(r"(^|[\\/])(tests?|testing)[\\/]|(^|[\\/])test_[^\\/]*$|_test\.py$|conftest\.py$")
+
+
+def claims_safety(name: str) -> bool:
+    return bool(SAFETY_NAME.search(name)) and not NOT_SAFETY_NAME.search(name)
+
 ADMIN_DECORATOR = re.compile(r"admin|permission|role|superuser|staff", re.IGNORECASE)
 LOGIN_DECORATOR = re.compile(r"login|auth|jwt|token|session|protected|required", re.IGNORECASE)
 
@@ -55,6 +75,9 @@ class Summary:
 
     returns: Taint = CLEAN
     param_sinks: dict[str, set[SinkHit]] = field(default_factory=dict)
+    # When every `return` gives a tuple of the same length, the taint of each
+    # position, so `data, name = f()` does not smear one onto the other.
+    items: tuple[Taint, ...] | None = None
 
 
 @dataclass
@@ -63,6 +86,8 @@ class Module:
     file: str
     tree: ast.Module
     names: ImportMap
+    # Module-level `NAME = "text"`, when NAME is assigned only once.
+    constants: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass

@@ -12,13 +12,13 @@ import io
 import warnings
 from pathlib import Path
 
-from taintscan.engine.model import Class, Function, Module, Summary
+from taintscan.engine.model import TEST_CODE, Class, Function, Module, Summary
 from taintscan.engine.names import ImportMap
 from taintscan.engine.routes import tainted_params
 from taintscan.engine.taint import from_param, from_source
 from taintscan.engine.tracker import Tracker
 from taintscan.finding import Finding
-from taintscan.rules import SINK_CLASSES
+from taintscan.rules import PATH_CLASSES, SINK_CLASSES
 
 SKIP_DIRS = {".venv", "venv", "env", ".git", "__pycache__", "node_modules", "site-packages"}
 MAX_ROUNDS = 10  # summaries only ever grow, so this is a safety cap
@@ -64,6 +64,8 @@ class Project:
         # Module-level `name = SomeClass()`: dotted variable name -> the
         # dotted name that was called, e.g. "app.db" -> "app.models.Database".
         self.instances: dict[str, str] = {}
+        # Module-level string constants: "app.config.API_URL" -> "https://api.example.com/".
+        self.constants: dict[str, str] = {}
         self.skipped: list[tuple[str, str]] = []  # (file, reason)
         self.findings: dict[tuple[str, str, int], Finding] = {}
         self._top_level: set[str] = set()
@@ -71,6 +73,7 @@ class Project:
         self._module_suffixes: dict[str, str | None] = {}
         self._class_suffixes: dict[str, str | None] = {}
         self._instance_suffixes: dict[str, str | None] = {}
+        self._constant_suffixes: dict[str, str | None] = {}
 
     # ---- loading ----------------------------------------------------
 
@@ -111,6 +114,19 @@ class Project:
                 self.classes[f"{name}.{node.name}"] = Class(
                     f"{name}.{node.name}", [base for base in bases if base]
                 )
+        assigned: dict[str, int] = {}
+        for node in tree.body:  # module-level `API_URL = "https://api.example.com/"`
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        assigned[target.id] = assigned.get(target.id, 0) + 1
+                        value = node.value
+                        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                            module.constants[target.id] = value.value
+        for constant in [c for c in module.constants if assigned[c] > 1]:
+            del module.constants[constant]  # reassigned: not a constant after all
+        for constant, text in module.constants.items():
+            self.constants[f"{name}.{constant}"] = text
         for node in tree.body:  # module-level `db = Database()`
             if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
                 called = module.names.resolve(node.value.func)
@@ -157,7 +173,7 @@ class Project:
     def class_name(self, name: str | None) -> str | None:
         """The class a dotted name refers to: a project class, or an outside
         class whose methods are sinks (requests.Session)."""
-        if name in SINK_CLASSES:
+        if name in SINK_CLASSES or name in PATH_CLASSES:
             return name
         return self._find(name, self.classes, self._class_suffixes)
 
@@ -165,6 +181,11 @@ class Project:
         """The class of a module-level object such as `db = Database()`."""
         full = self._find(name, self.instances, self._instance_suffixes)
         return self.class_name(self.instances[full]) if full else None
+
+    def constant(self, name: str | None) -> str | None:
+        """The text of a module-level string constant, given its dotted name."""
+        full = self._find(name, self.constants, self._constant_suffixes)
+        return self.constants[full] if full else None
 
     def is_internal(self, name: str) -> bool:
         """True if a dotted name points into this project, not a library."""
@@ -189,7 +210,12 @@ class Project:
         """`anything.method()`: a guess. We do not know the object's type, so
         this only answers when exactly one class in the project has a method
         with that name, and the name is not one built-in types also use."""
-        candidates = self.methods.get(method, [])
+        # A mock in the test suite is never what the application calls.
+        candidates = [
+            function
+            for function in self.methods.get(method, [])
+            if not TEST_CODE.search(function.module.file)
+        ]
         if len(candidates) == 1 and method not in BUILTIN_METHODS:
             return candidates[0]
         return None
@@ -201,17 +227,28 @@ class Project:
         self._module_suffixes = _suffix_index(self.modules, min_parts=1)
         self._class_suffixes = _suffix_index(self.classes, min_parts=2)
         self._instance_suffixes = _suffix_index(self.instances, min_parts=2)
+        self._constant_suffixes = _suffix_index(self.constants, min_parts=2)
         self._top_level = {name.split(".")[0] for name in self.modules}
 
+        # A function's result depends only on its own code and the summaries
+        # of the functions it calls. So after the first round, a function is
+        # analyzed again only if something it calls changed last round.
+        callees: dict[int, set[int]] = {}
+        changed_last: set[int] | None = None  # None: first round, analyze everything
         for _ in range(MAX_ROUNDS):
-            changed = False
+            changed_now: set[int] = set()
             for function in self.every_function:
-                summary = self._analyze_function(function)
+                key = id(function)
+                if changed_last is not None and not (callees.get(key, set()) & changed_last):
+                    continue
+                summary, used = self._analyze_function(function)
+                callees[key] = used
                 if summary != function.summary:
                     function.summary = summary
-                    changed = True
-            if not changed:
+                    changed_now.add(key)
+            if not changed_now:
                 break
+            changed_last = changed_now
 
         for module in self.modules.values():  # code outside any function
             tracker = Tracker(module, self, self.findings, Summary(), module.name)
@@ -219,7 +256,8 @@ class Project:
 
         return sorted(self.findings.values(), key=lambda f: (f.file, f.line, f.rule))
 
-    def _analyze_function(self, function: Function) -> Summary:
+    def _analyze_function(self, function: Function) -> tuple[Summary, set[int]]:
+        """Analyze one function. Returns its summary and the functions it called."""
         # Every parameter starts with a label naming itself, so we can see
         # where it ends up. URL parameters of a route are also really tainted.
         state = {param: from_param(param) for param in function.params}
@@ -232,5 +270,5 @@ class Project:
         except RecursionError:
             # An expression nested deeper than Python's stack allows (for
             # example thousands of chained "+"). Keep what we had.
-            return function.summary
-        return summary
+            return function.summary, tracker.callees
+        return summary, tracker.callees

@@ -16,7 +16,7 @@ import pathlib
 import re
 from dataclasses import replace
 
-from taintscan.engine.model import Function, Module, SinkHit, Summary
+from taintscan.engine.model import Function, Module, SinkHit, Summary, _last_name, claims_safety
 from taintscan.engine.routes import is_route
 from taintscan.engine.taint import (
     CLEAN,
@@ -33,14 +33,21 @@ from taintscan.engine.taint import (
 )
 from taintscan.finding import FROM_REQUEST, HIGH, LOW, PATH_TRAVERSAL, SSRF, Entry, Finding
 from taintscan.rules import (
+    CARRIERS,
     CLEANERS,
     EXIT_CALLS,
+    KEY_ATTRIBUTES,
     NORMALIZERS,
+    PATH_CLASSES,
+    PATH_LAST_COMPONENT,
     RECEIVER_SINKS,
     REGEX_CHECKS,
     REQUEST_SOURCES,
     SANITIZERS,
     SINKS,
+    TEMPFILE_CALLS,
+    TRAVERSAL_TEXT,
+    UPLOAD_SINKS,
     URL_HOST_ATTRIBUTES,
     URL_PARSERS,
 )
@@ -58,14 +65,6 @@ PINNED_HOST = re.compile(r"^https?://[^/@?#]+/")
 CONTENT_METHODS = {name for kind in (str, bytes, pathlib.Path) for name in dir(kind)}
 
 
-def _pins_host(node: ast.AST) -> bool:
-    return (
-        isinstance(node, ast.Constant)
-        and isinstance(node.value, str)
-        and bool(PINNED_HOST.match(node.value))
-    )
-
-
 def _text(node: ast.AST) -> str | None:
     """The value of a string literal, or None for anything else."""
     return node.value if isinstance(node, ast.Constant) and isinstance(node.value, str) else None
@@ -79,6 +78,13 @@ def _last_text(node: ast.AST) -> str | None:
     if isinstance(node, ast.JoinedStr) and node.values:
         return _last_text(node.values[-1])
     return _text(node)
+
+
+def _pick(index: int, keyword: str, positional: list, keywords: dict) -> Taint:
+    """The taint of one particular argument of a call."""
+    if keyword in keywords:
+        return keywords[keyword]
+    return positional[index] if index < len(positional) else CLEAN
 
 
 def _leaves_host_open(prefix_end: str | None) -> bool:
@@ -124,6 +130,12 @@ class Tracker:
         # `host = urlparse(url).hostname` -> {"host": "url"}: checking the
         # host against an allowlist vouches for the URL it came from.
         self.host_of: dict[str, str] = {}
+        # Project functions this one calls (by id), so the project knows
+        # what to analyze again when one of them changes.
+        self.callees: set[int] = set()
+        # Taint of each position of the returned tuple: None until the first
+        # `return`, False once two returns disagree about the shape.
+        self.returned_items: list[Taint] | None | bool = None
 
     # ---- statements -------------------------------------------------
 
@@ -150,6 +162,7 @@ class Tracker:
 
             case ast.Return():
                 self.summary.returns |= self.eval(stmt.value, state)
+                self.note_returned_items(stmt.value, state)
 
             case ast.If():
                 self.eval(stmt.test, state)
@@ -225,6 +238,44 @@ class Tracker:
         state.clear()
         state.update(new)
 
+    def note_returned_items(self, value: ast.expr | None, state: State) -> None:
+        """Keep Summary.items up to date: per-position taint of a returned tuple."""
+        if isinstance(value, ast.Tuple) and not any(isinstance(e, ast.Starred) for e in value.elts):
+            items = [unmarked(self.eval(element, state)) for element in value.elts]
+            if self.returned_items is None:
+                self.returned_items = items
+            elif self.returned_items and len(self.returned_items) == len(items):
+                self.returned_items = [a | b for a, b in zip(self.returned_items, items)]
+            else:
+                self.returned_items = False
+        elif not (value is None or (isinstance(value, ast.Constant) and value.value is None)):
+            self.returned_items = False  # returns something that is not a tuple
+        self.summary.items = tuple(self.returned_items) if self.returned_items else None
+
+    def assign_from_tuple_return(self, target: ast.expr, value: ast.expr, state: State) -> bool:
+        """`a, b = f()` where f always returns a 2-tuple: bind a and b separately."""
+        if not (isinstance(target, (ast.Tuple, ast.List)) and isinstance(value, ast.Call)):
+            return False
+        if any(isinstance(e, ast.Starred) for e in target.elts):
+            return False
+        name = self.module.names.resolve(value.func)
+        function = self.project.lookup(name) if name else None
+        receiver = None
+        if function is None:
+            function, certain = self.find_method(value, name, self.receiver_type(value.func))
+            if not certain:
+                return False
+            receiver = unmarked(self.eval(value.func, state))
+        items = function.summary.items
+        if items is None or len(items) != len(target.elts):
+            return False
+        positional = [self.eval(arg, state) for arg in value.args]
+        keywords = {kw.arg: self.eval(kw.value, state) for kw in value.keywords}
+        arguments = self.match_arguments(value, function, positional, keywords, receiver)
+        for element, item in zip(target.elts, items):
+            self.bind(element, self.substitute(item, arguments), state)
+        return True
+
     def assign(self, target: ast.expr, value: ast.expr, state: State) -> None:
         sequence = (ast.Tuple, ast.List)
         if (
@@ -239,7 +290,9 @@ class Tracker:
             for element, taint in zip(target.elts, taints):
                 self.bind(element, taint, state)
         else:
-            self.bind(target, self.eval(value, state), state)
+            taint = self.eval(value, state)  # always evaluated: this is what checks sinks
+            if not self.assign_from_tuple_return(target, value, state):
+                self.bind(target, taint, state)
             self.remember_type(target, value)
             self.remember_host(target, value)
 
@@ -278,10 +331,13 @@ class Tracker:
 
     def remember_type(self, target: ast.expr, value: ast.expr) -> None:
         """After `s = requests.Session()` or `repo = Repo()`, note what s holds."""
-        if isinstance(target, ast.Name) and isinstance(value, ast.Call):
-            kind = self.project.class_name(self.module.names.resolve(value.func))
-            if kind is not None:
-                self.types[target.id] = kind
+        if isinstance(target, ast.Name):
+            if isinstance(value, ast.Call):
+                kind = self.project.class_name(self.module.names.resolve(value.func))
+                if kind is not None:
+                    self.types[target.id] = kind
+            elif self.is_path(value):  # p = Path(base) / name
+                self.types[target.id] = "pathlib.Path"
 
     def remember_host(self, target: ast.expr, value: ast.expr) -> None:
         """After `parts = urlparse(url)` or `host = urlparse(url).hostname`."""
@@ -324,20 +380,34 @@ class Tracker:
 
     def apply_validation(self, test: ast.expr, outcome: bool, state: State) -> None:
         """Clear the variables that `test` vouches for when it comes out as `outcome`."""
-        for name, rule in self.vouched(test, outcome, state):
+        for name, rule, sure in self.vouched(test, outcome, state):
             if name not in state:
                 continue
-            if rule is None:
-                state[name] = state[name] & {NORMALIZED}
+            taint = state[name]
+            if not sure:
+                # The check looks like validation but we cannot read it:
+                # keep the taint, as weak, so it still shows up as low confidence.
+                rules = [rule] if rule else [base(r) for r, _ in taint]
+                for affected in set(rules):
+                    taint = weaken_rule(taint, affected)
+                state[name] = taint
+            elif rule is None:
+                state[name] = taint & {NORMALIZED}
             else:
-                state[name] = without(state[name], rule)
+                state[name] = without(taint, rule)
 
-    def vouched(self, test: ast.expr, outcome: bool, state: State) -> list[tuple[str, str | None]]:
-        """(variable, bug class) pairs known safe when `test` equals `outcome`.
+    def vouched(
+        self, test: ast.expr, outcome: bool, state: State
+    ) -> list[tuple[str, str | None, bool]]:
+        """(variable, bug class, sure) triples for what `test` tells us when it
+        equals `outcome`.
 
-        A bug class of None means safe for everything. Only three kinds of
-        check are understood: membership in a collection the attacker does
-        not control, a regex match, and startswith() on a resolved path.
+        A bug class of None means every bug class. `sure` is True for checks
+        we understand (membership in a collection the attacker does not
+        control, a regex match, startswith() on a resolved path): the taint
+        is cleared. It is False for checks that only look like validation (a
+        function with a safety-sounding name, a test for "/" or ".."): the
+        taint is downgraded to weak instead.
         """
         match test:
             case ast.UnaryOp(op=ast.Not()):
@@ -348,6 +418,15 @@ class Tracker:
 
             case ast.BoolOp(op=ast.Or()) if not outcome:  # no part held
                 return [v for part in test.values for v in self.vouched(part, False, state)]
+
+            case ast.Compare(
+                left=ast.Constant(value=str() as text),
+                ops=[ast.In() | ast.NotIn() as op],
+                comparators=[ast.Name(id=name)],
+            ) if text in TRAVERSAL_TEXT:
+                # `"/" in name` came out False (or `"/" not in name` True).
+                if isinstance(op, ast.In) != outcome:
+                    return [(name, PATH_TRAVERSAL, False)]
 
             case ast.Compare(ops=[ast.In() | ast.NotIn() as op], comparators=[collection]):
                 is_member = isinstance(op, ast.In) == outcome
@@ -365,46 +444,52 @@ class Tracker:
                 return self.vouched_by_call(test, state)
         return []
 
-    def member(self, node: ast.expr) -> list[tuple[str, str | None]]:
+    def member(self, node: ast.expr) -> list[tuple[str, str | None, bool]]:
         """What `node in ALLOWED` vouches for."""
         if isinstance(node, ast.Name):
-            vouched: list[tuple[str, str | None]] = [(node.id, None)]
+            vouched: list[tuple[str, str | None, bool]] = [(node.id, None, True)]
             if node.id in self.host_of:  # the host of a URL: the URL is fine for SSRF
-                vouched.append((self.host_of[node.id], SSRF))
+                vouched.append((self.host_of[node.id], SSRF, True))
             return vouched
         if isinstance(node, ast.Attribute) and node.attr in URL_HOST_ATTRIBUTES:
             url = self.parsed_url(node.value)
             if url is None and isinstance(node.value, ast.Name):
                 url = self.host_of.get(node.value.id)
             if url is not None:
-                return [(url, SSRF)]
+                return [(url, SSRF, True)]
         return []
 
-    def vouched_by_call(self, call: ast.Call, state: State) -> list[tuple[str, str | None]]:
+    def vouched_by_call(
+        self, call: ast.Call, state: State
+    ) -> list[tuple[str, str | None, bool]]:
         name = self.module.names.resolve(call.func)
         args = call.args
         # re.match(pattern, x)
         if name in REGEX_CHECKS and len(args) >= 2 and isinstance(args[1], ast.Name):
-            return [(args[1].id, None)]
+            return [(args[1].id, None, True)]
+        # is_trusted_url(x), path_is_child_of(x, base): the name claims the
+        # value is safe, but we cannot check that it is. Not sure.
+        if claims_safety(_last_name(call)):
+            return [(arg.id, None, False) for arg in args if isinstance(arg, ast.Name)]
         if not isinstance(call.func, ast.Attribute) or len(args) != 1:
             return []
         receiver, method = call.func.value, call.func.attr
         # PATTERN.match(x), for a compiled pattern
         if method in ("match", "fullmatch") and isinstance(args[0], ast.Name):
             if not self.eval(receiver, state):
-                return [(args[0].id, None)]
+                return [(args[0].id, None, True)]
         # resolved_path.startswith(base): only means something for a path
         # that has been through realpath/abspath/normpath.
         if method == "startswith" and not self.eval(args[0], state):
             if isinstance(receiver, ast.Name) and NORMALIZED in state.get(receiver.id, CLEAN):
-                return [(receiver.id, PATH_TRAVERSAL)]
+                return [(receiver.id, PATH_TRAVERSAL, True)]
             if (
                 isinstance(receiver, ast.Call)
                 and self.module.names.resolve(receiver.func) in NORMALIZERS
                 and receiver.args
                 and isinstance(receiver.args[0], ast.Name)
             ):
-                return [(receiver.args[0].id, PATH_TRAVERSAL)]
+                return [(receiver.args[0].id, PATH_TRAVERSAL, True)]
         return []
 
     # ---- expressions ------------------------------------------------
@@ -459,7 +544,37 @@ class Tracker:
             prefix, _, attribute = name.rpartition(".")
             if prefix == "flask.request" and attribute in REQUEST_SOURCES:
                 return from_source(FROM_REQUEST)
-        return self.eval(node.value, state)  # tainted.attr is tainted
+        taint = self.eval(node.value, state)  # tainted.attr is tainted
+        if node.attr in PATH_LAST_COMPONENT and self.is_path(node.value):
+            return without(taint, PATH_TRAVERSAL)  # Path(x).name has no directory part
+        if node.attr in KEY_ATTRIBUTES:
+            return weaken(taint)  # record.id is a key, not content
+        return taint
+
+    def is_path(self, node: ast.expr) -> bool:
+        """True if the expression is known to be a pathlib path object."""
+        if isinstance(node, ast.Call):
+            return self.module.names.resolve(node.func) in PATH_CLASSES
+        if isinstance(node, ast.Name):
+            return self.types.get(node.id) in PATH_CLASSES
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+            return self.is_path(node.left)  # Path(base) / name
+        return False
+
+    def text(self, node: ast.AST | None, state: State) -> str | None:
+        """The text of a string literal, or of a module-level string constant."""
+        literal = _text(node) if node is not None else None
+        if literal is not None:
+            return literal
+        if isinstance(node, ast.FormattedValue) and node.conversion == -1 and node.format_spec is None:
+            node = node.value  # f"{BASE_URL}..." names a constant
+        if isinstance(node, ast.Name) and node.id not in state:
+            if node.id in self.module.constants:
+                return self.module.constants[node.id]
+            return self.project.constant(self.module.names.resolve(node))
+        if isinstance(node, ast.Attribute):  # config.BASE_URL
+            return self.project.constant(self.module.names.resolve(node))
+        return None
 
     def eval_Subscript(self, node: ast.Subscript, state: State) -> Taint:
         # table[key]: a tainted key only picks which entry comes back.
@@ -467,11 +582,16 @@ class Tracker:
 
     def eval_BinOp(self, node: ast.BinOp, state: State) -> Taint:
         left, right = self.eval(node.left, state), self.eval(node.right, state)
-        if not isinstance(node.op, ast.Add):
+        if not isinstance(node.op, (ast.Add, ast.Mod)):
             return left | right
-        if _pins_host(node.left):  # "https://api.example.com/" + x
+        prefix = self.text(node.left, state)
+        if isinstance(node.op, ast.Mod):  # "https://api.example.com/%s" % x
+            if prefix is not None and PINNED_HOST.match(prefix.split("%")[0]):
+                return without(left | right, SSRF)
+            return left | right
+        if prefix is not None and PINNED_HOST.match(prefix):  # "https://api.example.com/" + x
             return without(left | right, SSRF)
-        if not left and _text(node.left) is None and not _leaves_host_open(_last_text(node.left)):
+        if not left and prefix is None and not _leaves_host_open(_last_text(node.left)):
             # BASE_URL + x: the start of the URL is not the attacker's and is
             # not a literal we can read. They most likely control only the path.
             return weaken_rule(right, SSRF)
@@ -489,12 +609,12 @@ class Tracker:
             if piece_taint and not taint:
                 if literal_so_far and PINNED_HOST.match(literal_so_far):
                     piece_taint = without(piece_taint, SSRF)
-                elif literal_so_far is None and not _leaves_host_open(_text(previous)):
+                elif literal_so_far is None and not _leaves_host_open(self.text(previous, state)):
                     piece_taint = weaken_rule(piece_taint, SSRF)
             elif piece_taint and taint and PINNED_HOST.match(literal_so_far or ""):
                 piece_taint = without(piece_taint, SSRF)
             taint |= piece_taint
-            text = _text(piece)
+            text = self.text(piece, state)
             if text is not None and literal_so_far is not None:
                 literal_so_far += text
             elif not piece_taint:
@@ -510,13 +630,25 @@ class Tracker:
         positional = [self.eval(arg, state) for arg in node.args]
         keywords = {kw.arg: self.eval(kw.value, state) for kw in node.keywords}
         receiver_type = self.receiver_type(node.func)
+        typed_name = None
 
         self.check_sink(node, name, positional, keywords)
         if receiver_type is not None:  # session.get(url), where session is a requests.Session
             typed_name = f"{receiver_type}.{node.func.attr}"
             self.check_sink(node, typed_name, positional, keywords)
-        self.check_receiver_sink(node, callee_taint)
+        self.check_receiver_sink(node, callee_taint, positional, keywords)
 
+        taint = self.call_result(node, name, typed_name, receiver_type, callee_taint, positional, keywords, state)
+        if claims_safety(_last_name(node)) and name not in SANITIZERS:
+            # safe_path(x), validate_outbound_url(x): the name claims the result
+            # is safe. We cannot check that, so the taint stays, as weak.
+            taint = weaken(taint) | (taint & {NORMALIZED})
+        return taint
+
+    def call_result(
+        self, node, name, typed_name, receiver_type, callee_taint, positional, keywords, state
+    ) -> Taint:
+        """The taint of what a call returns."""
         function = self.project.lookup(name) if name else None
         if function is not None:
             # We have the callee's code, so use what it actually does.
@@ -529,6 +661,22 @@ class Tracker:
             return CLEAN
         if name in SANITIZERS:
             return without(callee_taint | arguments, SANITIZERS[name])
+        if name in TEMPFILE_CALLS:
+            return weaken_rule(callee_taint | arguments, PATH_TRAVERSAL)
+        if name in CARRIERS:  # Request(url, data=...): only the URL matters
+            return unmarked(_pick(*CARRIERS[name], positional, keywords))
+        for http_call in (name, typed_name):
+            if http_call in SINKS and SINKS[http_call][0] == SSRF:
+                # The response comes from wherever the URL points. A tainted
+                # body or header sent to a fixed host does not make the
+                # reply attacker-controlled.
+                _, index, keyword = SINKS[http_call]
+                return unmarked(_pick(index, keyword, positional, keywords)) | weaken(arguments)
+        if isinstance(node.func, ast.Attribute) and node.func.attr == "format":
+            template = self.text(node.func.value, state)
+            if template is not None and PINNED_HOST.match(template.split("{")[0]):
+                # "https://api.example.com/{}".format(x): the host is fixed
+                return without(callee_taint | arguments, SSRF)
 
         # Unknown callee. If it builds its result out of the arguments, the
         # result is as tainted as they are; if it only looks something up
@@ -623,6 +771,7 @@ class Tracker:
     ) -> Taint:
         arguments = self.match_arguments(node, function, positional, keywords, receiver)
         summary = function.summary
+        self.callees.add(id(function))
         if function.guarded:
             # We called a helper that runs a validator-looking check
             # (`fp = _file_for(link, sub)`). Ranking signal only.
@@ -641,10 +790,15 @@ class Tracker:
                         )
                         self.report(passed_on, origin, node.lineno)
 
-        # The return value: swap each parameter label for whatever we
-        # actually passed for that parameter. Weak on either side stays weak.
+        return self.substitute(summary.returns, arguments)
+
+    @staticmethod
+    def substitute(returned: Taint, arguments: dict[str, Taint]) -> Taint:
+        """A callee's return taint, with each parameter label swapped for
+        whatever was actually passed for that parameter. Weak on either
+        side stays weak."""
         result: set = set()
-        for rule, origin in summary.returns:
+        for rule, origin in returned:
             if is_real(origin):
                 result.add((rule, origin))
                 continue
@@ -702,9 +856,17 @@ class Tracker:
         hit = SinkHit(rule, self.module.file, node.lineno, name, keyword, guarded=self.guarded)
         self.report_reaching(hit, taint)
 
-    def check_receiver_sink(self, node: ast.Call, receiver_taint: Taint) -> None:
-        """Path(user_input).read_text(): the tainted value is the object itself."""
+    def check_receiver_sink(self, node: ast.Call, receiver_taint: Taint, positional, keywords) -> None:
+        """Sinks that depend on what the method is called on.
+
+        Path(user_input).read_text(): the tainted value is the object itself.
+        request.files["f"].save(path): an uploaded file written to a tainted path.
+        """
         method = getattr(node.func, "attr", None)
+        if method in UPLOAD_SINKS and any(not is_weak(rule) for rule, _ in receiver_taint):
+            rule, index, keyword = UPLOAD_SINKS[method]
+            hit = SinkHit(rule, self.module.file, node.lineno, method, keyword, guarded=self.guarded)
+            self.report_reaching(hit, _pick(index, keyword, positional, keywords))
         if method in RECEIVER_SINKS:
             hit = SinkHit(
                 RECEIVER_SINKS[method], self.module.file, node.lineno, method, "self",

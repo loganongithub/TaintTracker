@@ -15,10 +15,10 @@
     "detected_with_fix": 11,
     "cleared_by_fix": 5,
     "partly_cleared_by_fix": 3,
-    "findings": 77,
-    "low_confidence": 38,
-    "other_findings": 34,
-    "unlabelled": 53,
+    "findings": 80,
+    "low_confidence": 39,
+    "other_findings": 35,
+    "unlabelled": 56,
     "true_positives": 17,
     "false_positives": 7,
     "false_positive_rate": 0.292,
@@ -66,16 +66,17 @@
                 "file": "app/routes.py",
                 "line": 294,
                 "source": "request",
-                "depth": 2,
+                "depth": 3,
                 "route": true,
                 "auth": "none",
                 "guarded": false
               }
             ],
-            "score": 73,
+            "score": 68,
             "reasons": [
               "+10 data enters in a Flask view",
               "+10 the view has no login decorator",
+              "-5 passes through 3 calls",
               "+3 reachable from 3 places"
             ],
             "key": "whoogle-search:app/request.py:339:ssrf",
@@ -177,16 +178,17 @@
                 "file": "app/routes.py",
                 "line": 296,
                 "source": "request",
-                "depth": 2,
+                "depth": 3,
                 "route": true,
                 "auth": "none",
                 "guarded": false
               }
             ],
-            "score": 73,
+            "score": 68,
             "reasons": [
               "+10 data enters in a Flask view",
               "+10 the view has no login decorator",
+              "-5 passes through 3 calls",
               "+3 reachable from 3 places"
             ]
           }
@@ -236,16 +238,17 @@
                   "file": "app/routes.py",
                   "line": 294,
                   "source": "request",
-                  "depth": 2,
+                  "depth": 3,
                   "route": true,
                   "auth": "none",
                   "guarded": false
                 }
               ],
-              "score": 73,
+              "score": 68,
               "reasons": [
                 "+10 data enters in a Flask view",
                 "+10 the view has no login decorator",
+                "-5 passes through 3 calls",
                 "+3 reachable from 3 places"
               ],
               "key": "whoogle-search:app/request.py:339:ssrf",
@@ -296,16 +299,17 @@
                   "file": "app/routes.py",
                   "line": 294,
                   "source": "request",
-                  "depth": 2,
+                  "depth": 3,
                   "route": true,
                   "auth": "none",
                   "guarded": false
                 }
               ],
-              "score": 73,
+              "score": 68,
               "reasons": [
                 "+10 data enters in a Flask view",
                 "+10 the view has no login decorator",
+                "-5 passes through 3 calls",
                 "+3 reachable from 3 places"
               ],
               "key": "whoogle-search:app/request.py:339:ssrf",
@@ -460,6 +464,31 @@
           {
             "rule": "path-traversal",
             "file": "cps/editbooks.py",
+            "line": 647,
+            "message": "untrusted input reaches save() argument 'dst'",
+            "confidence": "high",
+            "entries": [
+              {
+                "function": "cps.editbooks.upload_single_file",
+                "file": "cps/editbooks.py",
+                "line": 647,
+                "source": "request",
+                "depth": 0,
+                "route": false,
+                "auth": "none",
+                "guarded": false
+              }
+            ],
+            "score": 55,
+            "reasons": [
+              "+5 source and sink are in the same function"
+            ],
+            "key": "calibre-web:cps/editbooks.py:647:path-traversal",
+            "label": "unlabelled"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/editbooks.py",
             "line": 1033,
             "message": "untrusted input reaches shutil.copyfile() argument 'src'",
             "confidence": "high",
@@ -610,33 +639,6 @@
               "-20 a validator-looking function is called on the way"
             ],
             "key": "calibre-web:cps/helper.py:403:path-traversal",
-            "label": "unlabelled"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "cps/helper.py",
-            "line": 437,
-            "message": "untrusted input reaches shutil.move() argument 'src'",
-            "confidence": "high",
-            "entries": [
-              {
-                "function": "cps.editbooks.upload",
-                "file": "cps/editbooks.py",
-                "line": 1069,
-                "source": "request",
-                "depth": 2,
-                "route": true,
-                "auth": "login",
-                "guarded": true
-              }
-            ],
-            "score": 35,
-            "reasons": [
-              "+10 data enters in a Flask view",
-              "-5 the view requires login",
-              "-20 a validator-looking function is called on the way"
-            ],
-            "key": "calibre-web:cps/helper.py:437:path-traversal",
             "label": "unlabelled"
           },
           {
@@ -842,6 +844,32 @@
           },
           {
             "rule": "path-traversal",
+            "file": "cps/uploader.py",
+            "line": 317,
+            "message": "untrusted input reaches save() argument 'dst'",
+            "confidence": "high",
+            "entries": [
+              {
+                "function": "cps.editbooks.upload",
+                "file": "cps/editbooks.py",
+                "line": 1057,
+                "source": "request",
+                "depth": 2,
+                "route": true,
+                "auth": "login",
+                "guarded": false
+              }
+            ],
+            "score": 55,
+            "reasons": [
+              "+10 data enters in a Flask view",
+              "-5 the view requires login"
+            ],
+            "key": "calibre-web:cps/uploader.py:317:path-traversal",
+            "label": "unlabelled"
+          },
+          {
+            "rule": "path-traversal",
             "file": "cps/web.py",
             "line": 1445,
             "message": "untrusted input reaches open() argument 'file'",
@@ -933,6 +961,29 @@
               "-5 the view requires login",
               "-5 passes through 5 calls",
               "+3 reachable from 2 places"
+            ]
+          },
+          {
+            "rule": "path-traversal",
+            "file": "cps/editbooks.py",
+            "line": 647,
+            "message": "untrusted input reaches save() argument 'dst'",
+            "confidence": "high",
+            "entries": [
+              {
+                "function": "cps.editbooks.upload_single_file",
+                "file": "cps/editbooks.py",
+                "line": 647,
+                "source": "request",
+                "depth": 0,
+                "route": false,
+                "auth": "none",
+                "guarded": false
+              }
+            ],
+            "score": 55,
+            "reasons": [
+              "+5 source and sink are in the same function"
             ]
           },
           {
@@ -1077,31 +1128,6 @@
               "+10 data enters in a Flask view",
               "-5 the view requires login",
               "-5 passes through 3 calls",
-              "-20 a validator-looking function is called on the way"
-            ]
-          },
-          {
-            "rule": "path-traversal",
-            "file": "cps/helper.py",
-            "line": 437,
-            "message": "untrusted input reaches shutil.move() argument 'src'",
-            "confidence": "high",
-            "entries": [
-              {
-                "function": "cps.editbooks.upload",
-                "file": "cps/editbooks.py",
-                "line": 1069,
-                "source": "request",
-                "depth": 2,
-                "route": true,
-                "auth": "login",
-                "guarded": true
-              }
-            ],
-            "score": 35,
-            "reasons": [
-              "+10 data enters in a Flask view",
-              "-5 the view requires login",
               "-20 a validator-looking function is called on the way"
             ]
           },
@@ -1294,6 +1320,30 @@
           },
           {
             "rule": "path-traversal",
+            "file": "cps/uploader.py",
+            "line": 317,
+            "message": "untrusted input reaches save() argument 'dst'",
+            "confidence": "high",
+            "entries": [
+              {
+                "function": "cps.editbooks.upload",
+                "file": "cps/editbooks.py",
+                "line": 1057,
+                "source": "request",
+                "depth": 2,
+                "route": true,
+                "auth": "login",
+                "guarded": false
+              }
+            ],
+            "score": 55,
+            "reasons": [
+              "+10 data enters in a Flask view",
+              "-5 the view requires login"
+            ]
+          },
+          {
+            "rule": "path-traversal",
             "file": "cps/web.py",
             "line": 1445,
             "message": "untrusted input reaches open() argument 'file'",
@@ -1424,6 +1474,31 @@
           ],
           "key": "calibre-web:cps/comic.py:69:path-traversal",
           "label": "fp"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/editbooks.py",
+          "line": 647,
+          "message": "untrusted input reaches save() argument 'dst'",
+          "confidence": "high",
+          "entries": [
+            {
+              "function": "cps.editbooks.upload_single_file",
+              "file": "cps/editbooks.py",
+              "line": 647,
+              "source": "request",
+              "depth": 0,
+              "route": false,
+              "auth": "none",
+              "guarded": false
+            }
+          ],
+          "score": 55,
+          "reasons": [
+            "+5 source and sink are in the same function"
+          ],
+          "key": "calibre-web:cps/editbooks.py:647:path-traversal",
+          "label": "unlabelled"
         },
         {
           "rule": "path-traversal",
@@ -1578,33 +1653,6 @@
             "-20 a validator-looking function is called on the way"
           ],
           "key": "calibre-web:cps/helper.py:403:path-traversal",
-          "label": "unlabelled"
-        },
-        {
-          "rule": "path-traversal",
-          "file": "cps/helper.py",
-          "line": 437,
-          "message": "untrusted input reaches shutil.move() argument 'src'",
-          "confidence": "high",
-          "entries": [
-            {
-              "function": "cps.editbooks.upload",
-              "file": "cps/editbooks.py",
-              "line": 1069,
-              "source": "request",
-              "depth": 2,
-              "route": true,
-              "auth": "login",
-              "guarded": true
-            }
-          ],
-          "score": 35,
-          "reasons": [
-            "+10 data enters in a Flask view",
-            "-5 the view requires login",
-            "-20 a validator-looking function is called on the way"
-          ],
-          "key": "calibre-web:cps/helper.py:437:path-traversal",
           "label": "unlabelled"
         },
         {
@@ -1781,6 +1829,32 @@
           ],
           "key": "calibre-web:cps/uploader.py:208:path-traversal",
           "label": "fp"
+        },
+        {
+          "rule": "path-traversal",
+          "file": "cps/uploader.py",
+          "line": 317,
+          "message": "untrusted input reaches save() argument 'dst'",
+          "confidence": "high",
+          "entries": [
+            {
+              "function": "cps.editbooks.upload",
+              "file": "cps/editbooks.py",
+              "line": 1057,
+              "source": "request",
+              "depth": 2,
+              "route": true,
+              "auth": "login",
+              "guarded": false
+            }
+          ],
+          "score": 55,
+          "reasons": [
+            "+10 data enters in a Flask view",
+            "-5 the view requires login"
+          ],
+          "key": "calibre-web:cps/uploader.py:317:path-traversal",
+          "label": "unlabelled"
         },
         {
           "rule": "path-traversal",
@@ -3325,7 +3399,7 @@
                 "file": "services/orchest-webserver/app/app/views/orchest_api.py",
                 "line": 245,
                 "source": "request",
-                "depth": 2,
+                "depth": 3,
                 "route": true,
                 "auth": "none",
                 "guarded": false
@@ -3757,6 +3831,34 @@
               "-20 a validator-looking function is called on the way"
             ],
             "key": "orchest:services/orchest-webserver/app/app/views/views.py:875:ssrf",
+            "label": "unlabelled"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "services/orchest-webserver/app/app/views/views.py",
+            "line": 1124,
+            "message": "untrusted input reaches save() argument 'dst'",
+            "confidence": "high",
+            "entries": [
+              {
+                "function": "services.orchest-webserver.app.app.views.views.filemanager_upload",
+                "file": "services/orchest-webserver/app/app/views/views.py",
+                "line": 1124,
+                "source": "request",
+                "depth": 0,
+                "route": true,
+                "auth": "none",
+                "guarded": true
+              }
+            ],
+            "score": 55,
+            "reasons": [
+              "+10 data enters in a Flask view",
+              "+10 the view has no login decorator",
+              "+5 source and sink are in the same function",
+              "-20 a validator-looking function is called on the way"
+            ],
+            "key": "orchest:services/orchest-webserver/app/app/views/views.py:1124:path-traversal",
             "label": "unlabelled"
           },
           {
@@ -5787,7 +5889,7 @@
                   "file": "services/orchest-webserver/app/app/views/orchest_api.py",
                   "line": 245,
                   "source": "request",
-                  "depth": 2,
+                  "depth": 3,
                   "route": true,
                   "auth": "none",
                   "guarded": false
@@ -6056,6 +6158,34 @@
                 "+3 reachable from 2 places"
               ],
               "key": "orchest:services/orchest-webserver/app/app/views/views.py:871:path-traversal",
+              "label": "unlabelled"
+            },
+            {
+              "rule": "path-traversal",
+              "file": "services/orchest-webserver/app/app/views/views.py",
+              "line": 1124,
+              "message": "untrusted input reaches save() argument 'dst'",
+              "confidence": "high",
+              "entries": [
+                {
+                  "function": "services.orchest-webserver.app.app.views.views.filemanager_upload",
+                  "file": "services/orchest-webserver/app/app/views/views.py",
+                  "line": 1124,
+                  "source": "request",
+                  "depth": 0,
+                  "route": true,
+                  "auth": "none",
+                  "guarded": true
+                }
+              ],
+              "score": 55,
+              "reasons": [
+                "+10 data enters in a Flask view",
+                "+10 the view has no login decorator",
+                "+5 source and sink are in the same function",
+                "-20 a validator-looking function is called on the way"
+              ],
+              "key": "orchest:services/orchest-webserver/app/app/views/views.py:1124:path-traversal",
               "label": "unlabelled"
             },
             {
@@ -6350,6 +6480,35 @@
           {
             "rule": "path-traversal",
             "file": "ganga/GangaGUI/gui/routes.py",
+            "line": 955,
+            "message": "untrusted input reaches save() argument 'dst'",
+            "confidence": "high",
+            "entries": [
+              {
+                "function": "ganga.GangaGUI.gui.routes.storage_page",
+                "file": "ganga/GangaGUI/gui/routes.py",
+                "line": 955,
+                "source": "route-path",
+                "depth": 0,
+                "route": true,
+                "auth": "login",
+                "guarded": true
+              }
+            ],
+            "score": 50,
+            "reasons": [
+              "+10 data enters in a Flask view",
+              "-5 the view requires login",
+              "+10 a <path:...> URL parameter can contain \"/\"",
+              "+5 source and sink are in the same function",
+              "-20 a validator-looking function is called on the way"
+            ],
+            "key": "ganga:ganga/GangaGUI/gui/routes.py:955:path-traversal",
+            "label": "unlabelled"
+          },
+          {
+            "rule": "path-traversal",
+            "file": "ganga/GangaGUI/gui/routes.py",
             "line": 975,
             "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
             "confidence": "high",
@@ -6413,6 +6572,33 @@
         "files": 813,
         "skipped": 35,
         "findings": [
+          {
+            "rule": "path-traversal",
+            "file": "ganga/GangaGUI/gui/routes.py",
+            "line": 955,
+            "message": "untrusted input reaches save() argument 'dst'",
+            "confidence": "high",
+            "entries": [
+              {
+                "function": "ganga.GangaGUI.gui.routes.storage_page",
+                "file": "ganga/GangaGUI/gui/routes.py",
+                "line": 955,
+                "source": "route-path",
+                "depth": 0,
+                "route": true,
+                "auth": "login",
+                "guarded": true
+              }
+            ],
+            "score": 50,
+            "reasons": [
+              "+10 data enters in a Flask view",
+              "-5 the view requires login",
+              "+10 a <path:...> URL parameter can contain \"/\"",
+              "+5 source and sink are in the same function",
+              "-20 a validator-looking function is called on the way"
+            ]
+          },
           {
             "rule": "path-traversal",
             "file": "ganga/GangaGUI/gui/routes.py",
@@ -6535,6 +6721,35 @@
               ],
               "key": "ganga:ganga/GangaGUI/gui/routes.py:676:path-traversal",
               "label": "tp"
+            },
+            {
+              "rule": "path-traversal",
+              "file": "ganga/GangaGUI/gui/routes.py",
+              "line": 955,
+              "message": "untrusted input reaches save() argument 'dst'",
+              "confidence": "high",
+              "entries": [
+                {
+                  "function": "ganga.GangaGUI.gui.routes.storage_page",
+                  "file": "ganga/GangaGUI/gui/routes.py",
+                  "line": 955,
+                  "source": "route-path",
+                  "depth": 0,
+                  "route": true,
+                  "auth": "login",
+                  "guarded": true
+                }
+              ],
+              "score": 50,
+              "reasons": [
+                "+10 data enters in a Flask view",
+                "-5 the view requires login",
+                "+10 a <path:...> URL parameter can contain \"/\"",
+                "+5 source and sink are in the same function",
+                "-20 a validator-looking function is called on the way"
+              ],
+              "key": "ganga:ganga/GangaGUI/gui/routes.py:955:path-traversal",
+              "label": "unlabelled"
             },
             {
               "rule": "path-traversal",
@@ -7526,28 +7741,29 @@
         ],
         "low_confidence": [
           {
-            "rule": "ssrf",
-            "file": "csmserver/cisco_service/bug_service.py",
-            "line": 46,
-            "message": "untrusted input reaches requests.get() argument 'url'",
+            "rule": "path-traversal",
+            "file": "csmserver/report_writer.py",
+            "line": 210,
+            "message": "untrusted input reaches save() argument 'dst'",
             "confidence": "low",
             "entries": [
               {
-                "function": "csmserver.views.cco.api_get_ddts_details",
+                "function": "csmserver.views.cco.export_software_information",
                 "file": "csmserver/views/cco.py",
-                "line": 198,
+                "line": 347,
                 "source": "route",
-                "depth": 1,
+                "depth": 2,
                 "route": true,
                 "auth": "login",
                 "guarded": false
               }
             ],
-            "score": 25,
+            "score": 10,
             "reasons": [
               "-30 low confidence: the attacker's control over the value is partial",
               "+10 data enters in a Flask view",
-              "-5 the view requires login"
+              "-5 the view requires login",
+              "-15 a plain URL parameter cannot contain \"/\""
             ]
           },
           {
@@ -7651,6 +7867,31 @@
               "+10 data enters in a Flask view",
               "-5 the view requires login",
               "+5 source and sink are in the same function"
+            ]
+          },
+          {
+            "rule": "path-traversal",
+            "file": "csmserver/views/conformance_report.py",
+            "line": 86,
+            "message": "untrusted input reaches save() argument 'dst'",
+            "confidence": "low",
+            "entries": [
+              {
+                "function": "csmserver.views.conformance.api_export_conformance_report",
+                "file": "csmserver/views/conformance.py",
+                "line": 562,
+                "source": "request",
+                "depth": 1,
+                "route": true,
+                "auth": "login",
+                "guarded": false
+              }
+            ],
+            "score": 25,
+            "reasons": [
+              "-30 low confidence: the attacker's control over the value is partial",
+              "+10 data enters in a Flask view",
+              "-5 the view requires login"
             ]
           },
           {
