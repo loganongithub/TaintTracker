@@ -14,9 +14,11 @@ Code is only ever cloned and read. Nothing from a checkout is executed.
 
 import json
 import subprocess
+from dataclasses import asdict
 import tomllib
 from pathlib import Path
 
+from taintscan import rank
 from taintscan.engine import Project
 from taintscan.finding import HIGH
 
@@ -79,16 +81,24 @@ def prepare(case: dict, checkouts: Path) -> tuple[Path, str, str | None, list[st
 def scan(repo: Path, commit: str) -> dict:
     git(repo, "checkout", "--quiet", "--detach", "--force", commit)
     project = Project.from_path(repo)
+
+    def relative(path: str) -> str:
+        return Path(path).relative_to(repo).as_posix()
+
     findings = [
         {
             "rule": f.rule,
-            "file": Path(f.file).relative_to(repo).as_posix(),
+            "file": relative(f.file),
             "line": f.line,
-            "message": f.message.replace(str(repo), "").replace("\\", "/"),
+            "message": f.message,
             "confidence": f.confidence,
+            "entries": [{**asdict(entry), "file": relative(entry.file)} for entry in f.entries],
         }
         for f in project.run()
     ]
+    for finding in findings:
+        # No repository details here: the benchmark judges the code signals alone.
+        finding["score"], finding["reasons"] = rank.score(finding)
     return {
         "commit": commit,
         "files": len(project.modules),
@@ -189,6 +199,10 @@ def summarize(cases: list[dict]) -> dict:
         "false_positives": false_positives,
         # Only over findings someone has judged; unlabelled ones are left out.
         "false_positive_rate": round(false_positives / judged, 3) if judged else None,
+        # Does the ranking put labelled true findings above labelled false ones?
+        "ranking_auc": rank.auc(
+            [(f["score"], f["label"] == "tp") for f in everything if f["label"] in ("tp", "fp")]
+        ),
     }
 
 
@@ -221,6 +235,11 @@ def report(cases: list[dict], summary: dict) -> str:
             f"- False-positive rate over hand-labelled findings: "
             f"{summary['false_positive_rate']:.0%} "
             f"({summary['false_positives']} false, {summary['true_positives']} true)"
+        )
+    if summary["ranking_auc"] is not None:
+        lines.append(
+            f"- Ranking quality on hand-labelled findings (AUC): {summary['ranking_auc']:.2f} "
+            "(1.0 = every true finding outranks every false one, 0.5 = random order)"
         )
     lines += [
         "",

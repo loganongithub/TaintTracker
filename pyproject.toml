@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "taintscan"
 version = "0.1.0"
 description = "Static taint analysis for SSRF and path traversal in Flask apps"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = []
 
 [project.optional-dependencies]

@@ -3,6 +3,7 @@
 import ast
 import re
 
+from taintscan.finding import FROM_PATH_PARAM, FROM_URL_PARAM
 from taintscan.rules import SAFE_CONVERTERS
 
 ROUTE_DECORATORS = {"route", "get", "post", "put", "patch", "delete"}
@@ -21,11 +22,22 @@ def _literal_string(node: ast.AST) -> str | None:
     return None
 
 
-def tainted_params(func: ast.FunctionDef | ast.AsyncFunctionDef) -> set[str]:
-    """Parameters filled from the URL by a converter that allows arbitrary text."""
+def is_route(func: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    """True if the function is registered as a Flask view with a decorator."""
+    return any(
+        isinstance(decorator, ast.Call)
+        and isinstance(decorator.func, ast.Attribute)
+        and decorator.func.attr in ROUTE_DECORATORS
+        for decorator in func.decorator_list
+    )
+
+
+def tainted_params(func: ast.FunctionDef | ast.AsyncFunctionDef) -> dict[str, str]:
+    """Parameters filled from the URL by a converter that allows arbitrary
+    text, mapped to the kind of source they are."""
     args = func.args
     params = {a.arg for a in [*args.posonlyargs, *args.args, *args.kwonlyargs]}
-    tainted: set[str] = set()
+    tainted: dict[str, str] = {}
     for decorator in func.decorator_list:
         if not (
             isinstance(decorator, ast.Call)
@@ -35,9 +47,13 @@ def tainted_params(func: ast.FunctionDef | ast.AsyncFunctionDef) -> set[str]:
             continue
         rule = _literal_string(decorator.args[0]) if decorator.args else None
         if rule is None:
-            tainted |= params  # route string is not a literal: assume the worst
+            tainted.update(dict.fromkeys(params, FROM_PATH_PARAM))  # not a literal: assume the worst
             continue
         for match in URL_PARAM.finditer(rule):
-            if (match["converter"] or "string") not in SAFE_CONVERTERS:
-                tainted.add(match["name"])
-    return tainted & params
+            converter = match["converter"] or "string"
+            if converter not in SAFE_CONVERTERS:
+                # <path:x> may contain "/"; a plain <x> may not.
+                kind = FROM_PATH_PARAM if converter == "path" else FROM_URL_PARAM
+                if tainted.get(match["name"]) != FROM_PATH_PARAM:
+                    tainted[match["name"]] = kind
+    return {name: kind for name, kind in tainted.items() if name in params}

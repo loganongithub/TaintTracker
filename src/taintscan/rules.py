@@ -74,6 +74,9 @@ SANITIZERS: dict[str, str] = {
     "flask.safe_join": PATH_TRAVERSAL,
     "werkzeug.utils.safe_join": PATH_TRAVERSAL,
     "werkzeug.security.safe_join": PATH_TRAVERSAL,
+    # An in-memory buffer is not a path: send_file(io.BytesIO(data)) reads no file.
+    "io.BytesIO": PATH_TRAVERSAL,
+    "io.StringIO": PATH_TRAVERSAL,
 }
 
 # Calls that resolve a path. Their result can be checked with startswith().

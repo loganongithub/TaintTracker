@@ -17,18 +17,21 @@ import re
 from dataclasses import replace
 
 from taintscan.engine.model import Function, Module, SinkHit, Summary
+from taintscan.engine.routes import is_route
 from taintscan.engine.taint import (
     CLEAN,
-    FROM_SOURCE,
     NORMALIZED,
     Taint,
     base,
+    from_source,
+    is_real,
     is_weak,
     unmarked,
     weaken,
+    weaken_rule,
     without,
 )
-from taintscan.finding import HIGH, LOW, PATH_TRAVERSAL, SSRF, Finding
+from taintscan.finding import FROM_REQUEST, HIGH, LOW, PATH_TRAVERSAL, SSRF, Entry, Finding
 from taintscan.rules import (
     CLEANERS,
     EXIT_CALLS,
@@ -63,6 +66,26 @@ def _pins_host(node: ast.AST) -> bool:
     )
 
 
+def _text(node: ast.AST) -> str | None:
+    """The value of a string literal, or None for anything else."""
+    return node.value if isinstance(node, ast.Constant) and isinstance(node.value, str) else None
+
+
+def _last_text(node: ast.AST) -> str | None:
+    """The literal text an expression ends with, if it ends with one:
+    "://" for `scheme + "://"`."""
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        return _last_text(node.right)
+    if isinstance(node, ast.JoinedStr) and node.values:
+        return _last_text(node.values[-1])
+    return _text(node)
+
+
+def _leaves_host_open(prefix_end: str | None) -> bool:
+    """True if what follows this text is still the host part of a URL."""
+    return prefix_end is not None and prefix_end.endswith(("//", "@"))
+
+
 def _root_name(node: ast.AST) -> str | None:
     """The variable at the start of a chain like `a.b[0].c()`."""
     while isinstance(node, (ast.Attribute, ast.Subscript, ast.Call)):
@@ -86,14 +109,16 @@ class Tracker:
         findings: dict[tuple[str, str, int], Finding],
         summary: Summary,
         where: str,
-        owner: str | None = None,
+        function: Function | None = None,  # None for module-level code
     ):
         self.module = module
         self.project = project
         self.findings = findings  # shared across the whole project
         self.summary = summary  # of the function being analyzed
         self.where = where  # its name, for messages
-        self.owner = owner  # its class, if it is a method
+        self.function = function
+        self.owner = function.owner if function else None  # its class, if it is a method
+        self.guarded = function.guarded if function else False
         # Local variables known to hold an object: name -> class name.
         self.types: dict[str, str] = {}
         # `host = urlparse(url).hostname` -> {"host": "url"}: checking the
@@ -145,7 +170,7 @@ class Tracker:
                     self.replace(state, _union([taken, skipped]))
 
             case ast.For() | ast.AsyncFor():
-                self.bind(stmt.target, unmarked(self.eval(stmt.iter, state)), state)
+                self.bind_loop(stmt.target, stmt.iter, state)
                 self.run_loop(stmt.body, state)
                 self.run_block(stmt.orelse, state)
 
@@ -235,6 +260,21 @@ class Tracker:
                 root = _root_name(target)
                 if root is not None:
                     state[root] = state.get(root, CLEAN) | unmarked(taint)
+
+    def bind_loop(self, target: ast.expr, iterable: ast.expr, state: State) -> None:
+        """Bind the variable(s) of `for target in iterable`."""
+        taint = unmarked(self.eval(iterable, state))
+        if (
+            isinstance(iterable, ast.Call)
+            and self.module.names.resolve(iterable.func) == "enumerate"
+            and isinstance(target, (ast.Tuple, ast.List))
+            and len(target.elts) == 2
+        ):
+            # for i, item in enumerate(items): i is a counter, never tainted.
+            self.bind(target.elts[0], CLEAN, state)
+            self.bind(target.elts[1], taint, state)
+        else:
+            self.bind(target, taint, state)
 
     def remember_type(self, target: ast.expr, value: ast.expr) -> None:
         """After `s = requests.Session()` or `repo = Repo()`, note what s holds."""
@@ -418,7 +458,7 @@ class Tracker:
         if name is not None:
             prefix, _, attribute = name.rpartition(".")
             if prefix == "flask.request" and attribute in REQUEST_SOURCES:
-                return FROM_SOURCE
+                return from_source(FROM_REQUEST)
         return self.eval(node.value, state)  # tainted.attr is tainted
 
     def eval_Subscript(self, node: ast.Subscript, state: State) -> Taint:
@@ -426,15 +466,40 @@ class Tracker:
         return self.eval(node.value, state) | weaken(self.eval(node.slice, state))
 
     def eval_BinOp(self, node: ast.BinOp, state: State) -> Taint:
-        taint = self.eval(node.left, state) | self.eval(node.right, state)
-        if isinstance(node.op, ast.Add) and _pins_host(node.left):
-            taint = without(taint, SSRF)
-        return taint
+        left, right = self.eval(node.left, state), self.eval(node.right, state)
+        if not isinstance(node.op, ast.Add):
+            return left | right
+        if _pins_host(node.left):  # "https://api.example.com/" + x
+            return without(left | right, SSRF)
+        if not left and _text(node.left) is None and not _leaves_host_open(_last_text(node.left)):
+            # BASE_URL + x: the start of the URL is not the attacker's and is
+            # not a literal we can read. They most likely control only the path.
+            return weaken_rule(right, SSRF)
+        return left | right
 
     def eval_JoinedStr(self, node: ast.JoinedStr, state: State) -> Taint:
-        taint = self.eval_children(node, state)
-        if node.values and _pins_host(node.values[0]):
-            taint = without(taint, SSRF)
+        # Walk the pieces of an f-string left to right, applying the same
+        # rules as for "+": what comes before a tainted piece decides how
+        # much of the URL the attacker controls.
+        taint = CLEAN
+        literal_so_far: str | None = ""  # None once a non-literal piece was seen
+        previous: ast.expr | None = None
+        for piece in node.values:
+            piece_taint = self.eval(piece, state)
+            if piece_taint and not taint:
+                if literal_so_far and PINNED_HOST.match(literal_so_far):
+                    piece_taint = without(piece_taint, SSRF)
+                elif literal_so_far is None and not _leaves_host_open(_text(previous)):
+                    piece_taint = weaken_rule(piece_taint, SSRF)
+            elif piece_taint and taint and PINNED_HOST.match(literal_so_far or ""):
+                piece_taint = without(piece_taint, SSRF)
+            taint |= piece_taint
+            text = _text(piece)
+            if text is not None and literal_so_far is not None:
+                literal_so_far += text
+            elif not piece_taint:
+                literal_so_far = None
+            previous = piece
         return taint
 
     def eval_Call(self, node: ast.Call, state: State) -> Taint:
@@ -542,7 +607,7 @@ class Tracker:
     def eval_comprehension(self, node, state: State) -> Taint:
         inner = dict(state)  # loop variables do not leak out
         for generator in node.generators:
-            self.bind(generator.target, unmarked(self.eval(generator.iter, inner)), inner)
+            self.bind_loop(generator.target, generator.iter, inner)
             for condition in generator.ifs:
                 self.eval(condition, inner)
         if isinstance(node, ast.DictComp):
@@ -558,22 +623,30 @@ class Tracker:
     ) -> Taint:
         arguments = self.match_arguments(node, function, positional, keywords, receiver)
         summary = function.summary
-        via = f"passed in by {self.where} ({self.module.file}:{node.lineno})"
+        if function.guarded:
+            # We called a helper that runs a validator-looking check
+            # (`fp = _file_for(link, sub)`). Ranking signal only.
+            self.guarded = True
 
         # Sinks inside the callee that one of our arguments reaches.
         for param, hits in summary.param_sinks.items():
             for rule, origin in arguments.get(param, CLEAN):
                 for hit in hits:
                     if hit.rule == base(rule):
-                        weak = hit.weak or is_weak(rule)
-                        self.report(replace(hit, weak=weak), origin, via)
+                        passed_on = replace(
+                            hit,
+                            weak=hit.weak or is_weak(rule),
+                            depth=min(hit.depth + 1, 5),  # capped so recursion settles
+                            guarded=hit.guarded or self.guarded,
+                        )
+                        self.report(passed_on, origin, node.lineno)
 
         # The return value: swap each parameter label for whatever we
         # actually passed for that parameter. Weak on either side stays weak.
         result: set = set()
         for rule, origin in summary.returns:
-            if origin is None:
-                result.add((rule, None))
+            if is_real(origin):
+                result.add((rule, origin))
                 continue
             for argument_rule, argument_origin in arguments.get(origin, CLEAN):
                 if base(argument_rule) == base(rule):
@@ -626,13 +699,17 @@ class Tracker:
             taint = positional[index]
         else:
             return
-        self.report_reaching(SinkHit(rule, self.module.file, node.lineno, name, keyword), taint)
+        hit = SinkHit(rule, self.module.file, node.lineno, name, keyword, guarded=self.guarded)
+        self.report_reaching(hit, taint)
 
     def check_receiver_sink(self, node: ast.Call, receiver_taint: Taint) -> None:
         """Path(user_input).read_text(): the tainted value is the object itself."""
         method = getattr(node.func, "attr", None)
         if method in RECEIVER_SINKS:
-            hit = SinkHit(RECEIVER_SINKS[method], self.module.file, node.lineno, method, "self")
+            hit = SinkHit(
+                RECEIVER_SINKS[method], self.module.file, node.lineno, method, "self",
+                guarded=self.guarded,
+            )  # fmt: skip
             self.report_reaching(hit, receiver_taint)
 
     def report_reaching(self, hit: SinkHit, taint: Taint) -> None:
@@ -640,18 +717,38 @@ class Tracker:
             if base(rule) == hit.rule:
                 self.report(replace(hit, weak=is_weak(rule)), origin)
 
-    def report(self, hit: SinkHit, origin: str | None, via: str = "") -> None:
-        if origin is not None:
+    def report(self, hit: SinkHit, origin: str | None, call_line: int | None = None) -> None:
+        """Record that data with this origin reaches a sink.
+
+        `call_line` is set when the sink is inside a function we called: it
+        is the line of that call in the function being analyzed.
+        """
+        if not is_real(origin):
             # Only dangerous if our caller passes tainted data for this
             # parameter: note it in the summary and let the caller decide.
             self.summary.param_sinks.setdefault(origin, set()).add(hit)
             return
+        entry = Entry(
+            function=self.where,
+            file=self.module.file,
+            line=call_line or hit.line,
+            source=origin[1:] if origin else FROM_REQUEST,
+            depth=hit.depth,
+            route=bool(self.function and is_route(self.function.node)),
+            auth=self.function.auth if self.function else "none",
+            guarded=hit.guarded or self.guarded,
+        )
         confidence = LOW if hit.weak else HIGH
         key = (hit.rule, hit.file, hit.line)
         existing = self.findings.get(key)
-        if existing is not None and (existing.confidence == HIGH or confidence == LOW):
-            return  # keep the first finding, unless this one is more certain
-        message = f"untrusted input reaches {hit.sink}() argument '{hit.argument}'"
-        if via:
-            message += f", {via}"
-        self.findings[key] = Finding(hit.rule, hit.file, hit.line, message, confidence)
+        if existing is None or (existing.confidence == LOW and confidence == HIGH):
+            message = f"untrusted input reaches {hit.sink}() argument '{hit.argument}'"
+            self.findings[key] = Finding(
+                hit.rule, hit.file, hit.line, message, confidence, (entry,)
+            )
+        elif existing.confidence == confidence and len(existing.entries) < 20:
+            # The same sink reached another way: keep every entry point,
+            # one per function and source.
+            seen = {(e.function, e.source) for e in existing.entries}
+            if (entry.function, entry.source) not in seen:
+                self.findings[key] = replace(existing, entries=(*existing.entries, entry))

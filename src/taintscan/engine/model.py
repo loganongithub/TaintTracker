@@ -1,10 +1,32 @@
 """The records the engine keeps about a project: modules, functions, summaries."""
 
 import ast
+import re
 from dataclasses import dataclass, field
+from functools import cached_property
 
 from taintscan.engine.names import ImportMap
 from taintscan.engine.taint import CLEAN, Taint
+
+
+# Names that suggest a function checks or cleans its input. The engine does
+# not trust these (it cannot tell whether the check is any good); they only
+# lower a finding's rank.
+VALIDATOR_NAME = re.compile(
+    r"valid|sanitiz|sanitis|secure|safe|allowed|is_child|within|in_directory|whitelist|allowlist",
+    re.IGNORECASE,
+)
+ADMIN_DECORATOR = re.compile(r"admin|permission|role|superuser|staff", re.IGNORECASE)
+LOGIN_DECORATOR = re.compile(r"login|auth|jwt|token|session|protected|required", re.IGNORECASE)
+
+
+def _last_name(node: ast.AST) -> str:
+    """`login_required` from `@login_required`, `@x.login_required` or `@login_required(...)`."""
+    if isinstance(node, ast.Call):
+        node = node.func
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return node.id if isinstance(node, ast.Name) else ""
 
 
 @dataclass(frozen=True)
@@ -17,6 +39,8 @@ class SinkHit:
     sink: str  # e.g. "requests.get"
     argument: str  # e.g. "url"
     weak: bool = False  # reached only by weak taint (see taint.py)
+    depth: int = 0  # calls between here and where the data came in
+    guarded: bool = False  # a validator-looking function is called along the way
 
 
 @dataclass
@@ -54,6 +78,24 @@ class Function:
     module: Module
     owner: str | None = None  # dotted name of the class, if this is a method
     summary: Summary = field(default_factory=Summary)
+
+    @cached_property
+    def guarded(self) -> bool:
+        """True if the body calls something whose name looks like a validator."""
+        return any(
+            isinstance(node, ast.Call) and VALIDATOR_NAME.search(_last_name(node))
+            for node in ast.walk(self.node)
+        )
+
+    @cached_property
+    def auth(self) -> str:
+        """ "admin", "login" or "none", judged from the decorator names."""
+        names = [_last_name(decorator) for decorator in self.node.decorator_list]
+        if any(ADMIN_DECORATOR.search(name) for name in names):
+            return "admin"
+        if any(LOGIN_DECORATOR.search(name) for name in names):
+            return "login"
+        return "none"
 
     @property
     def binds_receiver(self) -> bool:

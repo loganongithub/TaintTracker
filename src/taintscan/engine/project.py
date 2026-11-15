@@ -15,7 +15,7 @@ from pathlib import Path
 from taintscan.engine.model import Class, Function, Module, Summary
 from taintscan.engine.names import ImportMap
 from taintscan.engine.routes import tainted_params
-from taintscan.engine.taint import FROM_SOURCE, from_param
+from taintscan.engine.taint import from_param, from_source
 from taintscan.engine.tracker import Tracker
 from taintscan.finding import Finding
 from taintscan.rules import SINK_CLASSES
@@ -86,7 +86,9 @@ class Project:
             try:
                 source = path.read_text(encoding="utf-8")
                 project.add_module(".".join(parts), source, str(path), is_package)
-            except (OSError, UnicodeDecodeError, SyntaxError, ValueError) as error:
+            except (
+                OSError, UnicodeDecodeError, SyntaxError, ValueError, RecursionError, MemoryError
+            ) as error:  # fmt: skip
                 project.skipped.append((str(path), str(error)))
         return project
 
@@ -221,11 +223,14 @@ class Project:
         # Every parameter starts with a label naming itself, so we can see
         # where it ends up. URL parameters of a route are also really tainted.
         state = {param: from_param(param) for param in function.params}
-        for param in tainted_params(function.node):
-            state[param] |= FROM_SOURCE
+        for param, kind in tainted_params(function.node).items():
+            state[param] |= from_source(kind)
         summary = Summary()
-        tracker = Tracker(
-            function.module, self, self.findings, summary, function.name, function.owner
-        )
-        tracker.run_block(function.node.body, state)
+        tracker = Tracker(function.module, self, self.findings, summary, function.name, function)
+        try:
+            tracker.run_block(function.node.body, state)
+        except RecursionError:
+            # An expression nested deeper than Python's stack allows (for
+            # example thousands of chained "+"). Keep what we had.
+            return function.summary
         return summary
