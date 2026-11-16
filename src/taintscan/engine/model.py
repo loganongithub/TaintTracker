@@ -28,7 +28,9 @@ SAFETY_NAME = re.compile(
     re.IGNORECASE,
 )
 # ...except these, which have "safe" in the name but hand back attacker content.
-NOT_SAFETY_NAME = re.compile(r"load|dump|substitute|eval|mark_safe|safe_str|safestring", re.IGNORECASE)
+NOT_SAFETY_NAME = re.compile(
+    r"safe_(load|dump|substitute|eval|str$)|mark_safe|safestring|^(load|dump|eval)", re.IGNORECASE
+)
 # Code that is not part of the running application.
 TEST_CODE = re.compile(r"(^|[\\/])(tests?|testing)[\\/]|(^|[\\/])test_[^\\/]*$|_test\.py$|conftest\.py$")
 
