@@ -39,6 +39,15 @@ def python_files(root: Path) -> list[Path]:
     return [p for p in sorted(root.rglob("*.py")) if not SKIP_DIRS.intersection(p.parts)]
 
 
+def _decorator_name(node: ast.AST) -> str:
+    """`before_request` from `@app.before_request` or `@bp.before_request()`."""
+    if isinstance(node, ast.Call):
+        node = node.func
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return node.id if isinstance(node, ast.Name) else ""
+
+
 def _suffix_index(names, min_parts: int) -> dict[str, str | None]:
     """Maps every dotted suffix of each name to the name, or None if two share it.
 
@@ -66,6 +75,12 @@ class Project:
         self.instances: dict[str, str] = {}
         # Module-level string constants: "app.config.API_URL" -> "https://api.example.com/".
         self.constants: dict[str, str] = {}
+        # Functions defined inside another function, by (enclosing function,
+        # name). App factories put their views and helpers there.
+        self.scoped: dict[tuple[int, str], Function] = {}
+        # True if the app registers a before_request hook: login may be
+        # enforced there, where the engine cannot see which routes it covers.
+        self.has_request_hook = False
         self.skipped: list[tuple[str, str]] = []  # (file, reason)
         self.findings: dict[tuple[str, str, int], Finding] = {}
         self._top_level: set[str] = set()
@@ -133,15 +148,29 @@ class Project:
                 for target in node.targets:
                     if called and isinstance(target, ast.Name):
                         self.instances[f"{name}.{target.id}"] = called
+        function_kinds = (ast.FunctionDef, ast.AsyncFunctionDef)
+        parents = {  # function node -> the function it is defined directly inside
+            id(member): id(node)
+            for node in ast.walk(tree)
+            if isinstance(node, function_kinds)
+            for member in node.body
+            if isinstance(member, function_kinds)
+        }
         for node in ast.walk(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if isinstance(node, function_kinds):
                 owner = owners.get(id(node))
-                function = Function(f"{owner or name}.{node.name}", node, module, owner)
+                parent = parents.get(id(node))
+                function = Function(f"{owner or name}.{node.name}", node, module, owner, parent=parent)
                 self.every_function.append(function)
                 if id(node) in top_level:
                     self.functions[function.name] = function
                 elif owner and not node.name.startswith("__"):
                     self.methods.setdefault(node.name, []).append(function)
+                elif parent is not None:
+                    self.scoped[(parent, node.name)] = function
+                hooks = {"before_request", "before_app_request"}
+                if any(_decorator_name(d) in hooks for d in node.decorator_list):
+                    self.has_request_hook = True
 
     # ---- name lookup ------------------------------------------------
 
@@ -191,6 +220,14 @@ class Project:
         """True if a dotted name points into this project, not a library."""
         first = name.split(".")[0]
         return first in self._top_level or first in self._module_suffixes
+
+    def scoped_function(self, caller: Function, name: str) -> Function | None:
+        """A function defined inside `caller`, or next to it inside the same
+        enclosing function."""
+        found = self.scoped.get((id(caller.node), name))
+        if found is None and caller.parent is not None:
+            found = self.scoped.get((caller.parent, name))
+        return found
 
     def method_of(self, owner: str, method: str, depth: int = 0) -> Function | None:
         """The method `owner` (a class) uses for this name: its own, or the

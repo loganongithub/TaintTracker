@@ -9,7 +9,6 @@ Status: phase 4 done. On 9 held-out CVEs the engine detects 7 (78%); on the 8 CV
 - Python 2 source cannot be parsed and is skipped (the scan reports how many files it skipped).
 - Method calls (`obj.method(x)`) are followed when the object's class is visible (assigned from a constructor in the same function or at module level) or when exactly one class in the project defines the method. Constructors (`__init__`) and object fields are not tracked.
 - Three kinds of validation check clear a finding: allowlist membership, `re.match`/`fullmatch`, and `startswith` on a resolved path. A check the engine cannot read (a function with a safety-sounding name, a test for `/` or `..`) only lowers the finding to low confidence. Blocklists are not trusted at all.
-- Functions defined inside other functions are analyzed but cannot be called across, so validation inside a nested helper is not seen.
 - Taint stored in globals, class attributes or databases is not tracked between functions.
 - Method calls on objects are not matched as sinks (`requests.Session().get(url)`, `Path(p).read_text()`).
 
@@ -55,5 +54,9 @@ The benchmark clones the repositories listed in `benchmarks/cves.toml` into `ben
 - `tests/snippets/` holds small vulnerable and safe files, and `tests/projects/` holds multi-file cases; `tests/test_snippets.py` runs the engine over both.
 - `exercises/` holds the phase 1 `ast` exercises.
 - `DECISIONS.md` records each design choice and its reason.
+
+## Triage
+
+`taintscan top` shows the ranked findings with a verdict next to each. Verdicts are kept in `data/labels.toml`, keyed `"owner/repo:file:line:rule"`, with one of `real`, `plausible`, `unsure` or `fp`. That file is git-ignored and must stay private: it names possible vulnerabilities that have not been disclosed.
 
 Proofs of concept run only against local copies, never a live deployment.

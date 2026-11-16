@@ -115,6 +115,11 @@ TEMPFILE_CALLS = {
 # Calls that resolve a path. Their result can be checked with startswith().
 NORMALIZERS = {"os.path.realpath", "os.path.abspath", "os.path.normpath"}
 
+# re.sub(r"[^a-zA-Z0-9_-]", "", x): a pattern that is one negated character
+# class deletes everything outside the class. If the class has no "/", the
+# result cannot name another directory.
+STRIP_PATTERN = r"\[\^(?P<kept>(?:\\.|[^\]\\])+)\][+*]?"
+
 # Calls that leave the current function, so code after them does not run.
 EXIT_CALLS = {"flask.abort", "werkzeug.exceptions.abort", "abort", "sys.exit", "exit", "quit"}
 

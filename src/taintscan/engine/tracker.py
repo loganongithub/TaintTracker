@@ -45,6 +45,7 @@ from taintscan.rules import (
     REQUEST_SOURCES,
     SANITIZERS,
     SINKS,
+    STRIP_PATTERN,
     TEMPFILE_CALLS,
     TRAVERSAL_TEXT,
     UPLOAD_SINKS,
@@ -80,6 +81,21 @@ def _last_text(node: ast.AST) -> str | None:
     return _text(node)
 
 
+def _checked_name(node: ast.AST) -> str | None:
+    """The variable a check is about: `x`, or `x` in `x or ""`."""
+    if isinstance(node, ast.BoolOp) and isinstance(node.op, ast.Or):
+        first, *rest = node.values
+        if all(isinstance(value, ast.Constant) for value in rest):
+            node = first
+    return node.id if isinstance(node, ast.Name) else None
+
+
+def _mid_component(text: str | None) -> bool:
+    """True if what follows this text continues the same path component:
+    "report_" yes, "/srv/files/" no."""
+    return bool(text) and text[-1] not in "/\\"
+
+
 def _pick(index: int, keyword: str, positional: list, keywords: dict) -> Taint:
     """The taint of one particular argument of a call."""
     if keyword in keywords:
@@ -90,6 +106,18 @@ def _pick(index: int, keyword: str, positional: list, keywords: dict) -> Taint:
 def _leaves_host_open(prefix_end: str | None) -> bool:
     """True if what follows this text is still the host part of a URL."""
     return prefix_end is not None and prefix_end.endswith(("//", "@"))
+
+
+def _strips_to_safe_characters(node: ast.Call) -> bool:
+    """re.sub(r"[^a-zA-Z0-9_-]", "", x): keeps only characters from a class
+    that has no "/" in it."""
+    if len(node.args) < 3:
+        return False
+    pattern, replacement = _text(node.args[0]), _text(node.args[1])
+    if pattern is None or replacement is None or "/" in replacement or ".." in replacement:
+        return False
+    match = re.fullmatch(STRIP_PATTERN, pattern)
+    return match is not None and "/" not in match["kept"] and "\\\\" not in match["kept"]
 
 
 def _root_name(node: ast.AST) -> str | None:
@@ -130,6 +158,9 @@ class Tracker:
         # `host = urlparse(url).hostname` -> {"host": "url"}: checking the
         # host against an allowlist vouches for the URL it came from.
         self.host_of: dict[str, str] = {}
+        # `job = store.get_by_id(job_id)` -> {"job": ["job_id"]}: if the lookup
+        # found something, the key it was given names an existing record.
+        self.looked_up: dict[str, list[str]] = {}
         # Project functions this one calls (by id), so the project knows
         # what to analyze again when one of them changes.
         self.callees: set[int] = set()
@@ -259,7 +290,7 @@ class Tracker:
         if any(isinstance(e, ast.Starred) for e in target.elts):
             return False
         name = self.module.names.resolve(value.func)
-        function = self.project.lookup(name) if name else None
+        function = self.project_function(value, name)
         receiver = None
         if function is None:
             function, certain = self.find_method(value, name, self.receiver_type(value.func))
@@ -295,6 +326,7 @@ class Tracker:
                 self.bind(target, taint, state)
             self.remember_type(target, value)
             self.remember_host(target, value)
+            self.remember_lookup(target, value)
 
     def bind(self, target: ast.expr, taint: Taint, state: State) -> None:
         match target:
@@ -302,6 +334,7 @@ class Tracker:
                 state[target.id] = taint  # overwrite: old taint is gone
                 self.types.pop(target.id, None)
                 self.host_of.pop(target.id, None)
+                self.looked_up.pop(target.id, None)
             case ast.Tuple() | ast.List():
                 for element in target.elts:
                     self.bind(element, unmarked(taint), state)
@@ -338,6 +371,17 @@ class Tracker:
                     self.types[target.id] = kind
             elif self.is_path(value):  # p = Path(base) / name
                 self.types[target.id] = "pathlib.Path"
+
+    def remember_lookup(self, target: ast.expr, value: ast.expr) -> None:
+        """After `record = store.find(key)`: note which variables were the key."""
+        if not (isinstance(target, ast.Name) and isinstance(value, ast.Call)):
+            return
+        if self.keeps_content(value, CLEAN):
+            return  # builds its result from the arguments: not a lookup
+        keys = [arg.id for arg in value.args if isinstance(arg, ast.Name)]
+        keys += [kw.value.id for kw in value.keywords if isinstance(kw.value, ast.Name)]
+        if keys:
+            self.looked_up[target.id] = keys
 
     def remember_host(self, target: ast.expr, value: ast.expr) -> None:
         """After `parts = urlparse(url)` or `host = urlparse(url).hostname`."""
@@ -442,6 +486,11 @@ class Tracker:
 
             case ast.Call() if outcome:
                 return self.vouched_by_call(test, state)
+
+            case ast.Name(id=name) if outcome and name in self.looked_up:
+                # `job = store.get_by_id(job_id)` came back with something:
+                # job_id names a record that exists. Not sure, so weak.
+                return [(key, None, False) for key in self.looked_up[name]]
         return []
 
     def member(self, node: ast.expr) -> list[tuple[str, str | None, bool]]:
@@ -465,8 +514,8 @@ class Tracker:
         name = self.module.names.resolve(call.func)
         args = call.args
         # re.match(pattern, x)
-        if name in REGEX_CHECKS and len(args) >= 2 and isinstance(args[1], ast.Name):
-            return [(args[1].id, None, True)]
+        if name in REGEX_CHECKS and len(args) >= 2 and _checked_name(args[1]):
+            return [(_checked_name(args[1]), None, True)]
         # is_trusted_url(x), path_is_child_of(x, base): the name claims the
         # value is safe, but we cannot check that it is. Not sure.
         if claims_safety(_last_name(call)):
@@ -475,12 +524,12 @@ class Tracker:
             return []
         receiver, method = call.func.value, call.func.attr
         # PATTERN.match(x), for a compiled pattern
-        if method in ("match", "fullmatch") and isinstance(args[0], ast.Name):
+        if method in ("match", "fullmatch") and _checked_name(args[0]):
             if not self.eval(receiver, state):
-                return [(args[0].id, None, True)]
-        # resolved_path.startswith(base): only means something for a path
-        # that has been through realpath/abspath/normpath.
-        if method == "startswith" and not self.eval(args[0], state):
+                return [(_checked_name(args[0]), None, True)]
+        # resolved_path.startswith(base) and resolved_path.is_relative_to(base):
+        # only mean something for a path that has been resolved first.
+        if method in ("startswith", "is_relative_to") and not self.eval(args[0], state):
             if isinstance(receiver, ast.Name) and NORMALIZED in state.get(receiver.id, CLEAN):
                 return [(receiver.id, PATH_TRAVERSAL, True)]
             if (
@@ -501,10 +550,17 @@ class Tracker:
             return CLEAN
         method = getattr(self, f"eval_{type(node).__name__}", self.eval_children)
         taint = method(node, state)
-        if not isinstance(node, (ast.Name, ast.Call, ast.NamedExpr)):
+        if not isinstance(node, (ast.Name, ast.Call, ast.NamedExpr, ast.IfExp)):
             # Anything built from a resolved path is no longer known to be one.
             taint = unmarked(taint)
         return taint
+
+    def eval_IfExp(self, node: ast.IfExp, state: State) -> Taint:
+        # `a.resolve() if cond else b.resolve()` is still a resolved path.
+        self.eval(node.test, state)
+        chosen, other = self.eval(node.body, state), self.eval(node.orelse, state)
+        taint = chosen | other
+        return taint if NORMALIZED in chosen and NORMALIZED in other else unmarked(taint)
 
     def eval_children(self, node: ast.AST, state: State) -> Taint:
         # Default rule: an expression is tainted if any part of it is.
@@ -585,6 +641,11 @@ class Tracker:
         if not isinstance(node.op, (ast.Add, ast.Mod)):
             return left | right
         prefix = self.text(node.left, state)
+        if isinstance(node.op, ast.Add) and _mid_component(_last_text(node.left) or prefix):
+            # "report_" + x: x starts in the middle of a file name. "../" in
+            # it then needs a directory called "report_.." to exist, so this
+            # only escapes on Windows, which resolves ".." without looking.
+            right = weaken_rule(right, PATH_TRAVERSAL)
         if isinstance(node.op, ast.Mod):  # "https://api.example.com/%s" % x
             if prefix is not None and PINNED_HOST.match(prefix.split("%")[0]):
                 return without(left | right, SSRF)
@@ -613,6 +674,8 @@ class Tracker:
                     piece_taint = weaken_rule(piece_taint, SSRF)
             elif piece_taint and taint and PINNED_HOST.match(literal_so_far or ""):
                 piece_taint = without(piece_taint, SSRF)
+            if piece_taint and previous is not None and _mid_component(self.text(previous, state)):
+                piece_taint = weaken_rule(piece_taint, PATH_TRAVERSAL)  # f"report_{x}.json"
             taint |= piece_taint
             text = self.text(piece, state)
             if text is not None and literal_so_far is not None:
@@ -645,11 +708,19 @@ class Tracker:
             taint = weaken(taint) | (taint & {NORMALIZED})
         return taint
 
+    def project_function(self, node: ast.Call, name: str | None) -> Function | None:
+        """The project function a call names: a top-level one, or one nested
+        in the same enclosing function (a helper inside an app factory)."""
+        function = self.project.lookup(name) if name else None
+        if function is None and isinstance(node.func, ast.Name) and self.function is not None:
+            function = self.project.scoped_function(self.function, node.func.id)
+        return function
+
     def call_result(
         self, node, name, typed_name, receiver_type, callee_taint, positional, keywords, state
     ) -> Taint:
         """The taint of what a call returns."""
-        function = self.project.lookup(name) if name else None
+        function = self.project_function(node, name)
         if function is not None:
             # We have the callee's code, so use what it actually does.
             return self.apply_summary(node, function, positional, keywords)
@@ -661,6 +732,8 @@ class Tracker:
             return CLEAN
         if name in SANITIZERS:
             return without(callee_taint | arguments, SANITIZERS[name])
+        if name == "re.sub" and _strips_to_safe_characters(node):
+            return without(unmarked(positional[2]), PATH_TRAVERSAL)
         if name in TEMPFILE_CALLS:
             return weaken_rule(callee_taint | arguments, PATH_TRAVERSAL)
         if name in CARRIERS:  # Request(url, data=...): only the URL matters
@@ -879,6 +952,17 @@ class Tracker:
             if base(rule) == hit.rule:
                 self.report(replace(hit, weak=is_weak(rule)), origin)
 
+    def auth(self) -> str:
+        """ "admin", "login", "hook" or "none" for the function being analyzed.
+
+        "hook": no login decorator, but the app has a before_request hook,
+        which is where many apps check the session for every route.
+        """
+        found = self.function.auth if self.function else "none"
+        if found == "none" and self.project.has_request_hook:
+            return "hook"
+        return found
+
     def report(self, hit: SinkHit, origin: str | None, call_line: int | None = None) -> None:
         """Record that data with this origin reaches a sink.
 
@@ -897,7 +981,7 @@ class Tracker:
             source=origin[1:] if origin else FROM_REQUEST,
             depth=hit.depth,
             route=bool(self.function and is_route(self.function.node)),
-            auth=self.function.auth if self.function else "none",
+            auth=self.auth(),
             guarded=hit.guarded or self.guarded,
         )
         confidence = LOW if hit.weak else HIGH

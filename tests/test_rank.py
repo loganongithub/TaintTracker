@@ -92,3 +92,59 @@ def test_auc():
     assert rank.auc([(10, True), (40, False)]) == 0.0
     assert rank.auc([(50, True), (50, False)]) == 0.5
     assert rank.auc([(50, True)]) is None
+
+
+HOOKED = """\
+from flask import Flask, abort, request, session
+
+app = Flask(__name__)
+
+
+@app.before_request
+def require_login():
+    if not session.get("user"):
+        abort(401)
+
+
+@app.route("/read")
+def read():
+    with open("/srv/files/" + request.args["name"]) as f:
+        return f.read()
+"""
+
+
+def test_a_before_request_hook_is_noted_and_removes_the_no_login_bonus():
+    (found,) = analyze(HOOKED, "app.py")
+    assert found.entries[0].auth == "hook"
+    (bare,) = analyze(HOOKED.replace("@app.before_request\n", ""), "app.py")
+    assert bare.entries[0].auth == "none"
+    as_dict = lambda f: {"rule": f.rule, "file": f.file, "confidence": f.confidence,
+                         "entries": [vars(e) for e in f.entries]}  # noqa: E731
+    assert rank.score(as_dict(found))[0] < rank.score(as_dict(bare))[0]
+
+
+SHAPED_LIKE_A_VALIDATOR = """\
+import os
+
+from flask import Flask, request
+
+app = Flask(__name__)
+
+
+def pruefen(ziel):
+    ziel = os.path.realpath(ziel)
+    if os.path.commonpath([ziel, "/srv"]) != "/srv":
+        raise ValueError("nicht erlaubt")
+    return ziel
+
+
+@app.route("/read")
+def read():
+    with open(pruefen(request.args["ziel"])) as f:
+        return f.read()
+"""
+
+
+def test_a_function_shaped_like_a_validator_marks_the_entry_guarded():
+    findings = analyze(SHAPED_LIKE_A_VALIDATOR, "app.py")
+    assert findings and all(entry.guarded for f in findings for entry in f.entries)

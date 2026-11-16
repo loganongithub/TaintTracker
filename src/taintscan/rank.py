@@ -34,6 +34,8 @@ def score_entry(entry: dict, rule: str) -> tuple[int, list[str]]:
         add(10, "data enters in a Flask view")
     if entry["auth"] == "none" and entry["route"]:
         add(10, "the view has no login decorator")
+    elif entry["auth"] == "hook":
+        add(0, "no login decorator, but the app has a before_request hook that may check")
     elif entry["auth"] == "login":
         add(-5, "the view requires login")
     elif entry["auth"] == "admin":
@@ -43,7 +45,7 @@ def score_entry(entry: dict, rule: str) -> tuple[int, list[str]]:
         if entry["source"] == FROM_PATH_PARAM:
             add(10, 'a <path:...> URL parameter can contain "/"')
         elif entry["source"] == FROM_URL_PARAM:
-            add(-15, 'a plain URL parameter cannot contain "/"')
+            add(-25, 'a plain URL parameter cannot contain "/"')
 
     if entry["depth"] == 0:
         add(5, "source and sink are in the same function")
@@ -69,7 +71,7 @@ def score(finding: dict, repo: dict | None = None, repo_findings: int = 0) -> tu
     if finding["confidence"] != HIGH:
         add(-30, "low confidence: the attacker's control over the value is partial")
     if NOT_APP_CODE.search(finding["file"]):
-        add(-30, "the sink is in test, example or tooling code")
+        add(-40, "the sink is in test, example or tooling code")
 
     # A sink is as dangerous as its most dangerous entry point.
     entries = finding.get("entries") or []

@@ -15,14 +15,14 @@
     "detected_with_fix": 11,
     "cleared_by_fix": 5,
     "partly_cleared_by_fix": 3,
-    "findings": 80,
-    "low_confidence": 39,
-    "other_findings": 35,
-    "unlabelled": 56,
+    "findings": 74,
+    "low_confidence": 45,
+    "other_findings": 32,
+    "unlabelled": 51,
     "true_positives": 17,
-    "false_positives": 7,
-    "false_positive_rate": 0.292,
-    "ranking_auc": 0.891
+    "false_positives": 6,
+    "false_positive_rate": 0.261,
+    "ranking_auc": 0.892
   },
   "cases": [
     {
@@ -66,17 +66,16 @@
                 "file": "app/routes.py",
                 "line": 294,
                 "source": "request",
-                "depth": 3,
+                "depth": 2,
                 "route": true,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               }
             ],
-            "score": 68,
+            "score": 63,
             "reasons": [
               "+10 data enters in a Flask view",
-              "+10 the view has no login decorator",
-              "-5 passes through 3 calls",
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+3 reachable from 3 places"
             ],
             "key": "whoogle-search:app/request.py:339:ssrf",
@@ -178,17 +177,16 @@
                 "file": "app/routes.py",
                 "line": 296,
                 "source": "request",
-                "depth": 3,
+                "depth": 2,
                 "route": true,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               }
             ],
-            "score": 68,
+            "score": 63,
             "reasons": [
               "+10 data enters in a Flask view",
-              "+10 the view has no login decorator",
-              "-5 passes through 3 calls",
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+3 reachable from 3 places"
             ]
           }
@@ -238,17 +236,16 @@
                   "file": "app/routes.py",
                   "line": 294,
                   "source": "request",
-                  "depth": 3,
+                  "depth": 2,
                   "route": true,
-                  "auth": "none",
+                  "auth": "hook",
                   "guarded": false
                 }
               ],
-              "score": 68,
+              "score": 63,
               "reasons": [
                 "+10 data enters in a Flask view",
-                "+10 the view has no login decorator",
-                "-5 passes through 3 calls",
+                "+0 no login decorator, but the app has a before_request hook that may check",
                 "+3 reachable from 3 places"
               ],
               "key": "whoogle-search:app/request.py:339:ssrf",
@@ -299,17 +296,16 @@
                   "file": "app/routes.py",
                   "line": 294,
                   "source": "request",
-                  "depth": 3,
+                  "depth": 2,
                   "route": true,
-                  "auth": "none",
+                  "auth": "hook",
                   "guarded": false
                 }
               ],
-              "score": 68,
+              "score": 63,
               "reasons": [
                 "+10 data enters in a Flask view",
-                "+10 the view has no login decorator",
-                "-5 passes through 3 calls",
+                "+0 no login decorator, but the app has a before_request hook that may check",
                 "+3 reachable from 3 places"
               ],
               "key": "whoogle-search:app/request.py:339:ssrf",
@@ -412,12 +408,13 @@
                 "source": "request",
                 "depth": 0,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               }
             ],
             "score": 55,
             "reasons": [
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+5 source and sink are in the same function"
             ],
             "key": "calibre-web:cps/admin.py:981:path-traversal",
@@ -437,7 +434,7 @@
                 "source": "request",
                 "depth": 4,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               },
               {
@@ -460,31 +457,6 @@
             ],
             "key": "calibre-web:cps/comic.py:69:path-traversal",
             "label": "fp"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "cps/editbooks.py",
-            "line": 647,
-            "message": "untrusted input reaches save() argument 'dst'",
-            "confidence": "high",
-            "entries": [
-              {
-                "function": "cps.editbooks.upload_single_file",
-                "file": "cps/editbooks.py",
-                "line": 647,
-                "source": "request",
-                "depth": 0,
-                "route": false,
-                "auth": "none",
-                "guarded": false
-              }
-            ],
-            "score": 55,
-            "reasons": [
-              "+5 source and sink are in the same function"
-            ],
-            "key": "calibre-web:cps/editbooks.py:647:path-traversal",
-            "label": "unlabelled"
           },
           {
             "rule": "path-traversal",
@@ -554,7 +526,7 @@
                 "source": "request",
                 "depth": 4,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               },
               {
@@ -592,7 +564,7 @@
                 "source": "request",
                 "depth": 2,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               },
               {
@@ -608,6 +580,7 @@
             ],
             "score": 53,
             "reasons": [
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+3 reachable from 2 places"
             ],
             "key": "calibre-web:cps/fb2.py:31:path-traversal",
@@ -821,7 +794,7 @@
                 "source": "request",
                 "depth": 2,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               },
               {
@@ -837,6 +810,7 @@
             ],
             "score": 53,
             "reasons": [
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+3 reachable from 2 places"
             ],
             "key": "calibre-web:cps/uploader.py:208:path-traversal",
@@ -867,13 +841,40 @@
             ],
             "key": "calibre-web:cps/uploader.py:317:path-traversal",
             "label": "unlabelled"
+          }
+        ],
+        "low_confidence": [
+          {
+            "rule": "path-traversal",
+            "file": "cps/editbooks.py",
+            "line": 647,
+            "message": "untrusted input reaches save() argument 'dst'",
+            "confidence": "low",
+            "entries": [
+              {
+                "function": "cps.editbooks.upload_single_file",
+                "file": "cps/editbooks.py",
+                "line": 647,
+                "source": "request",
+                "depth": 0,
+                "route": false,
+                "auth": "hook",
+                "guarded": false
+              }
+            ],
+            "score": 25,
+            "reasons": [
+              "-30 low confidence: the attacker's control over the value is partial",
+              "+0 no login decorator, but the app has a before_request hook that may check",
+              "+5 source and sink are in the same function"
+            ]
           },
           {
             "rule": "path-traversal",
             "file": "cps/web.py",
             "line": 1445,
             "message": "untrusted input reaches open() argument 'file'",
-            "confidence": "high",
+            "confidence": "low",
             "entries": [
               {
                 "function": "cps.web.serve_book",
@@ -886,18 +887,16 @@
                 "guarded": false
               }
             ],
-            "score": 45,
+            "score": 5,
             "reasons": [
+              "-30 low confidence: the attacker's control over the value is partial",
               "+10 data enters in a Flask view",
               "-5 the view requires login",
-              "-15 a plain URL parameter cannot contain \"/\"",
+              "-25 a plain URL parameter cannot contain \"/\"",
               "+5 source and sink are in the same function"
-            ],
-            "key": "calibre-web:cps/web.py:1445:path-traversal",
-            "label": "fp"
+            ]
           }
-        ],
-        "low_confidence": []
+        ]
       },
       "fixed": {
         "commit": "965352c8d96c9eae7a6867ff76b0db137d04b0b8",
@@ -918,12 +917,13 @@
                 "source": "request",
                 "depth": 0,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               }
             ],
             "score": 55,
             "reasons": [
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+5 source and sink are in the same function"
             ]
           },
@@ -941,7 +941,7 @@
                 "source": "request",
                 "depth": 4,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               },
               {
@@ -961,29 +961,6 @@
               "-5 the view requires login",
               "-5 passes through 5 calls",
               "+3 reachable from 2 places"
-            ]
-          },
-          {
-            "rule": "path-traversal",
-            "file": "cps/editbooks.py",
-            "line": 647,
-            "message": "untrusted input reaches save() argument 'dst'",
-            "confidence": "high",
-            "entries": [
-              {
-                "function": "cps.editbooks.upload_single_file",
-                "file": "cps/editbooks.py",
-                "line": 647,
-                "source": "request",
-                "depth": 0,
-                "route": false,
-                "auth": "none",
-                "guarded": false
-              }
-            ],
-            "score": 55,
-            "reasons": [
-              "+5 source and sink are in the same function"
             ]
           },
           {
@@ -1050,7 +1027,7 @@
                 "source": "request",
                 "depth": 4,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               },
               {
@@ -1086,7 +1063,7 @@
                 "source": "request",
                 "depth": 2,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               },
               {
@@ -1102,6 +1079,7 @@
             ],
             "score": 53,
             "reasons": [
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+3 reachable from 2 places"
             ]
           },
@@ -1299,7 +1277,7 @@
                 "source": "request",
                 "depth": 2,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               },
               {
@@ -1315,6 +1293,7 @@
             ],
             "score": 53,
             "reasons": [
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+3 reachable from 2 places"
             ]
           },
@@ -1341,13 +1320,40 @@
               "+10 data enters in a Flask view",
               "-5 the view requires login"
             ]
+          }
+        ],
+        "low_confidence": [
+          {
+            "rule": "path-traversal",
+            "file": "cps/editbooks.py",
+            "line": 647,
+            "message": "untrusted input reaches save() argument 'dst'",
+            "confidence": "low",
+            "entries": [
+              {
+                "function": "cps.editbooks.upload_single_file",
+                "file": "cps/editbooks.py",
+                "line": 647,
+                "source": "request",
+                "depth": 0,
+                "route": false,
+                "auth": "hook",
+                "guarded": false
+              }
+            ],
+            "score": 25,
+            "reasons": [
+              "-30 low confidence: the attacker's control over the value is partial",
+              "+0 no login decorator, but the app has a before_request hook that may check",
+              "+5 source and sink are in the same function"
+            ]
           },
           {
             "rule": "path-traversal",
             "file": "cps/web.py",
             "line": 1445,
             "message": "untrusted input reaches open() argument 'file'",
-            "confidence": "high",
+            "confidence": "low",
             "entries": [
               {
                 "function": "cps.web.serve_book",
@@ -1360,16 +1366,16 @@
                 "guarded": false
               }
             ],
-            "score": 45,
+            "score": 5,
             "reasons": [
+              "-30 low confidence: the attacker's control over the value is partial",
               "+10 data enters in a Flask view",
               "-5 the view requires login",
-              "-15 a plain URL parameter cannot contain \"/\"",
+              "-25 a plain URL parameter cannot contain \"/\"",
               "+5 source and sink are in the same function"
             ]
           }
-        ],
-        "low_confidence": []
+        ]
       },
       "cves": [
         {
@@ -1426,12 +1432,13 @@
               "source": "request",
               "depth": 0,
               "route": false,
-              "auth": "none",
+              "auth": "hook",
               "guarded": false
             }
           ],
           "score": 55,
           "reasons": [
+            "+0 no login decorator, but the app has a before_request hook that may check",
             "+5 source and sink are in the same function"
           ],
           "key": "calibre-web:cps/admin.py:981:path-traversal",
@@ -1451,7 +1458,7 @@
               "source": "request",
               "depth": 4,
               "route": false,
-              "auth": "none",
+              "auth": "hook",
               "guarded": false
             },
             {
@@ -1474,31 +1481,6 @@
           ],
           "key": "calibre-web:cps/comic.py:69:path-traversal",
           "label": "fp"
-        },
-        {
-          "rule": "path-traversal",
-          "file": "cps/editbooks.py",
-          "line": 647,
-          "message": "untrusted input reaches save() argument 'dst'",
-          "confidence": "high",
-          "entries": [
-            {
-              "function": "cps.editbooks.upload_single_file",
-              "file": "cps/editbooks.py",
-              "line": 647,
-              "source": "request",
-              "depth": 0,
-              "route": false,
-              "auth": "none",
-              "guarded": false
-            }
-          ],
-          "score": 55,
-          "reasons": [
-            "+5 source and sink are in the same function"
-          ],
-          "key": "calibre-web:cps/editbooks.py:647:path-traversal",
-          "label": "unlabelled"
         },
         {
           "rule": "path-traversal",
@@ -1568,7 +1550,7 @@
               "source": "request",
               "depth": 4,
               "route": false,
-              "auth": "none",
+              "auth": "hook",
               "guarded": false
             },
             {
@@ -1606,7 +1588,7 @@
               "source": "request",
               "depth": 2,
               "route": false,
-              "auth": "none",
+              "auth": "hook",
               "guarded": false
             },
             {
@@ -1622,6 +1604,7 @@
           ],
           "score": 53,
           "reasons": [
+            "+0 no login decorator, but the app has a before_request hook that may check",
             "+3 reachable from 2 places"
           ],
           "key": "calibre-web:cps/fb2.py:31:path-traversal",
@@ -1809,7 +1792,7 @@
               "source": "request",
               "depth": 2,
               "route": false,
-              "auth": "none",
+              "auth": "hook",
               "guarded": false
             },
             {
@@ -1825,6 +1808,7 @@
           ],
           "score": 53,
           "reasons": [
+            "+0 no login decorator, but the app has a before_request hook that may check",
             "+3 reachable from 2 places"
           ],
           "key": "calibre-web:cps/uploader.py:208:path-traversal",
@@ -1855,34 +1839,6 @@
           ],
           "key": "calibre-web:cps/uploader.py:317:path-traversal",
           "label": "unlabelled"
-        },
-        {
-          "rule": "path-traversal",
-          "file": "cps/web.py",
-          "line": 1445,
-          "message": "untrusted input reaches open() argument 'file'",
-          "confidence": "high",
-          "entries": [
-            {
-              "function": "cps.web.serve_book",
-              "file": "cps/web.py",
-              "line": 1445,
-              "source": "route",
-              "depth": 0,
-              "route": true,
-              "auth": "login",
-              "guarded": false
-            }
-          ],
-          "score": 45,
-          "reasons": [
-            "+10 data enters in a Flask view",
-            "-5 the view requires login",
-            "-15 a plain URL parameter cannot contain \"/\"",
-            "+5 source and sink are in the same function"
-          ],
-          "key": "calibre-web:cps/web.py:1445:path-traversal",
-          "label": "fp"
         }
       ]
     },
@@ -1909,14 +1865,14 @@
                 "source": "route-path",
                 "depth": 1,
                 "route": true,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               }
             ],
-            "score": 80,
+            "score": 70,
             "reasons": [
               "+10 data enters in a Flask view",
-              "+10 the view has no login decorator",
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+10 a <path:...> URL parameter can contain \"/\""
             ],
             "key": "flaskcode:flaskcode/utils.py:23:path-traversal",
@@ -1936,14 +1892,14 @@
                 "source": "route-path",
                 "depth": 0,
                 "route": true,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               }
             ],
-            "score": 85,
+            "score": 75,
             "reasons": [
               "+10 data enters in a Flask view",
-              "+10 the view has no login decorator",
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+10 a <path:...> URL parameter can contain \"/\"",
               "+5 source and sink are in the same function"
             ],
@@ -1979,14 +1935,14 @@
                   "source": "route-path",
                   "depth": 1,
                   "route": true,
-                  "auth": "none",
+                  "auth": "hook",
                   "guarded": false
                 }
               ],
-              "score": 80,
+              "score": 70,
               "reasons": [
                 "+10 data enters in a Flask view",
-                "+10 the view has no login decorator",
+                "+0 no login decorator, but the app has a before_request hook that may check",
                 "+10 a <path:...> URL parameter can contain \"/\""
               ],
               "key": "flaskcode:flaskcode/utils.py:23:path-traversal",
@@ -2006,14 +1962,14 @@
                   "source": "route-path",
                   "depth": 0,
                   "route": true,
-                  "auth": "none",
+                  "auth": "hook",
                   "guarded": false
                 }
               ],
-              "score": 85,
+              "score": 75,
               "reasons": [
                 "+10 data enters in a Flask view",
-                "+10 the view has no login decorator",
+                "+0 no login decorator, but the app has a before_request hook that may check",
                 "+10 a <path:...> URL parameter can contain \"/\"",
                 "+5 source and sink are in the same function"
               ],
@@ -2047,14 +2003,14 @@
                   "source": "route-path",
                   "depth": 1,
                   "route": true,
-                  "auth": "none",
+                  "auth": "hook",
                   "guarded": false
                 }
               ],
-              "score": 80,
+              "score": 70,
               "reasons": [
                 "+10 data enters in a Flask view",
-                "+10 the view has no login decorator",
+                "+0 no login decorator, but the app has a before_request hook that may check",
                 "+10 a <path:...> URL parameter can contain \"/\""
               ],
               "key": "flaskcode:flaskcode/utils.py:23:path-traversal",
@@ -2074,14 +2030,14 @@
                   "source": "route-path",
                   "depth": 0,
                   "route": true,
-                  "auth": "none",
+                  "auth": "hook",
                   "guarded": false
                 }
               ],
-              "score": 85,
+              "score": 75,
               "reasons": [
                 "+10 data enters in a Flask view",
-                "+10 the view has no login decorator",
+                "+0 no login decorator, but the app has a before_request hook that may check",
                 "+10 a <path:...> URL parameter can contain \"/\"",
                 "+5 source and sink are in the same function"
               ],
@@ -2130,72 +2086,6 @@
             ],
             "key": "opendiamond:opendiamond/dataretriever/diamond_store.py:137:path-traversal",
             "label": "tp"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "opendiamond/dataretriever/mixer_store.py",
-            "line": 83,
-            "message": "untrusted input reaches open() argument 'file'",
-            "confidence": "high",
-            "entries": [
-              {
-                "function": "opendiamond.dataretriever.mixer_store.get_scope",
-                "file": "opendiamond/dataretriever/mixer_store.py",
-                "line": 83,
-                "source": "route",
-                "depth": 0,
-                "route": true,
-                "auth": "none",
-                "guarded": false
-              },
-              {
-                "function": "opendiamond.dataretriever.mixer_store.get_mixer_classes",
-                "file": "opendiamond/dataretriever/mixer_store.py",
-                "line": 72,
-                "source": "route",
-                "depth": 1,
-                "route": true,
-                "auth": "none",
-                "guarded": false
-              }
-            ],
-            "score": 63,
-            "reasons": [
-              "+10 data enters in a Flask view",
-              "+10 the view has no login decorator",
-              "-15 a plain URL parameter cannot contain \"/\"",
-              "+5 source and sink are in the same function",
-              "+3 reachable from 2 places"
-            ],
-            "key": "opendiamond:opendiamond/dataretriever/mixer_store.py:83:path-traversal",
-            "label": "unlabelled"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "opendiamond/dataretriever/mixer_store.py",
-            "line": 203,
-            "message": "untrusted input reaches open() argument 'file'",
-            "confidence": "high",
-            "entries": [
-              {
-                "function": "opendiamond.dataretriever.mixer_store.get_mixer_classes",
-                "file": "opendiamond/dataretriever/mixer_store.py",
-                "line": 65,
-                "source": "route",
-                "depth": 1,
-                "route": true,
-                "auth": "none",
-                "guarded": false
-              }
-            ],
-            "score": 55,
-            "reasons": [
-              "+10 data enters in a Flask view",
-              "+10 the view has no login decorator",
-              "-15 a plain URL parameter cannot contain \"/\""
-            ],
-            "key": "opendiamond:opendiamond/dataretriever/mixer_store.py:203:path-traversal",
-            "label": "unlabelled"
           },
           {
             "rule": "path-traversal",
@@ -2279,44 +2169,16 @@
                 "guarded": false
               }
             ],
-            "score": 33,
+            "score": 13,
             "reasons": [
-              "-30 the sink is in test, example or tooling code",
+              "-40 the sink is in test, example or tooling code",
               "+10 data enters in a Flask view",
               "+10 the view has no login decorator",
-              "-15 a plain URL parameter cannot contain \"/\"",
+              "-25 a plain URL parameter cannot contain \"/\"",
               "+5 source and sink are in the same function",
               "+3 reachable from 2 places"
             ],
             "key": "opendiamond:opendiamond/dataretriever/test_store.py:106:path-traversal",
-            "label": "unlabelled"
-          },
-          {
-            "rule": "path-traversal",
-            "file": "opendiamond/dataretriever/test_store.py",
-            "line": 233,
-            "message": "untrusted input reaches open() argument 'file'",
-            "confidence": "high",
-            "entries": [
-              {
-                "function": "opendiamond.dataretriever.test_store.get_mixer_classes",
-                "file": "opendiamond/dataretriever/test_store.py",
-                "line": 67,
-                "source": "route",
-                "depth": 1,
-                "route": true,
-                "auth": "none",
-                "guarded": false
-              }
-            ],
-            "score": 25,
-            "reasons": [
-              "-30 the sink is in test, example or tooling code",
-              "+10 data enters in a Flask view",
-              "+10 the view has no login decorator",
-              "-15 a plain URL parameter cannot contain \"/\""
-            ],
-            "key": "opendiamond:opendiamond/dataretriever/test_store.py:233:path-traversal",
             "label": "unlabelled"
           },
           {
@@ -2337,9 +2199,9 @@
                 "guarded": false
               }
             ],
-            "score": 55,
+            "score": 45,
             "reasons": [
-              "-30 the sink is in test, example or tooling code",
+              "-40 the sink is in test, example or tooling code",
               "+10 data enters in a Flask view",
               "+10 the view has no login decorator",
               "+10 a <path:...> URL parameter can contain \"/\"",
@@ -2359,7 +2221,7 @@
                 "function": "opendiamond.dataretriever.yfcc100m_mysql_store.get_object_src_http",
                 "file": "opendiamond/dataretriever/yfcc100m_mysql_store.py",
                 "line": 128,
-                "source": "route-path",
+                "source": "route",
                 "depth": 0,
                 "route": true,
                 "auth": "none",
@@ -2369,7 +2231,7 @@
                 "function": "opendiamond.dataretriever.yfcc100m_mysql_store.get_object_src_http",
                 "file": "opendiamond/dataretriever/yfcc100m_mysql_store.py",
                 "line": 128,
-                "source": "route",
+                "source": "route-path",
                 "depth": 0,
                 "route": true,
                 "auth": "none",
@@ -2388,7 +2250,99 @@
             "label": "unlabelled"
           }
         ],
-        "low_confidence": []
+        "low_confidence": [
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/mixer_store.py",
+            "line": 83,
+            "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "low",
+            "entries": [
+              {
+                "function": "opendiamond.dataretriever.mixer_store.get_scope",
+                "file": "opendiamond/dataretriever/mixer_store.py",
+                "line": 83,
+                "source": "route",
+                "depth": 0,
+                "route": true,
+                "auth": "none",
+                "guarded": false
+              },
+              {
+                "function": "opendiamond.dataretriever.mixer_store.get_mixer_classes",
+                "file": "opendiamond/dataretriever/mixer_store.py",
+                "line": 72,
+                "source": "route",
+                "depth": 1,
+                "route": true,
+                "auth": "none",
+                "guarded": false
+              }
+            ],
+            "score": 23,
+            "reasons": [
+              "-30 low confidence: the attacker's control over the value is partial",
+              "+10 data enters in a Flask view",
+              "+10 the view has no login decorator",
+              "-25 a plain URL parameter cannot contain \"/\"",
+              "+5 source and sink are in the same function",
+              "+3 reachable from 2 places"
+            ]
+          },
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/mixer_store.py",
+            "line": 203,
+            "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "low",
+            "entries": [
+              {
+                "function": "opendiamond.dataretriever.mixer_store.get_mixer_classes",
+                "file": "opendiamond/dataretriever/mixer_store.py",
+                "line": 65,
+                "source": "route",
+                "depth": 1,
+                "route": true,
+                "auth": "none",
+                "guarded": false
+              }
+            ],
+            "score": 15,
+            "reasons": [
+              "-30 low confidence: the attacker's control over the value is partial",
+              "+10 data enters in a Flask view",
+              "+10 the view has no login decorator",
+              "-25 a plain URL parameter cannot contain \"/\""
+            ]
+          },
+          {
+            "rule": "path-traversal",
+            "file": "opendiamond/dataretriever/test_store.py",
+            "line": 233,
+            "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "low",
+            "entries": [
+              {
+                "function": "opendiamond.dataretriever.test_store.get_mixer_classes",
+                "file": "opendiamond/dataretriever/test_store.py",
+                "line": 67,
+                "source": "route",
+                "depth": 1,
+                "route": true,
+                "auth": "none",
+                "guarded": false
+              }
+            ],
+            "score": -25,
+            "reasons": [
+              "-30 low confidence: the attacker's control over the value is partial",
+              "-40 the sink is in test, example or tooling code",
+              "+10 data enters in a Flask view",
+              "+10 the view has no login decorator",
+              "-25 a plain URL parameter cannot contain \"/\""
+            ]
+          }
+        ]
       },
       "fixed": {
         "commit": "398049c187ee644beabab44d6fece82251c1ea56",
@@ -2468,72 +2422,6 @@
             {
               "rule": "path-traversal",
               "file": "opendiamond/dataretriever/mixer_store.py",
-              "line": 83,
-              "message": "untrusted input reaches open() argument 'file'",
-              "confidence": "high",
-              "entries": [
-                {
-                  "function": "opendiamond.dataretriever.mixer_store.get_scope",
-                  "file": "opendiamond/dataretriever/mixer_store.py",
-                  "line": 83,
-                  "source": "route",
-                  "depth": 0,
-                  "route": true,
-                  "auth": "none",
-                  "guarded": false
-                },
-                {
-                  "function": "opendiamond.dataretriever.mixer_store.get_mixer_classes",
-                  "file": "opendiamond/dataretriever/mixer_store.py",
-                  "line": 72,
-                  "source": "route",
-                  "depth": 1,
-                  "route": true,
-                  "auth": "none",
-                  "guarded": false
-                }
-              ],
-              "score": 63,
-              "reasons": [
-                "+10 data enters in a Flask view",
-                "+10 the view has no login decorator",
-                "-15 a plain URL parameter cannot contain \"/\"",
-                "+5 source and sink are in the same function",
-                "+3 reachable from 2 places"
-              ],
-              "key": "opendiamond:opendiamond/dataretriever/mixer_store.py:83:path-traversal",
-              "label": "unlabelled"
-            },
-            {
-              "rule": "path-traversal",
-              "file": "opendiamond/dataretriever/mixer_store.py",
-              "line": 203,
-              "message": "untrusted input reaches open() argument 'file'",
-              "confidence": "high",
-              "entries": [
-                {
-                  "function": "opendiamond.dataretriever.mixer_store.get_mixer_classes",
-                  "file": "opendiamond/dataretriever/mixer_store.py",
-                  "line": 65,
-                  "source": "route",
-                  "depth": 1,
-                  "route": true,
-                  "auth": "none",
-                  "guarded": false
-                }
-              ],
-              "score": 55,
-              "reasons": [
-                "+10 data enters in a Flask view",
-                "+10 the view has no login decorator",
-                "-15 a plain URL parameter cannot contain \"/\""
-              ],
-              "key": "opendiamond:opendiamond/dataretriever/mixer_store.py:203:path-traversal",
-              "label": "unlabelled"
-            },
-            {
-              "rule": "path-traversal",
-              "file": "opendiamond/dataretriever/mixer_store.py",
               "line": 266,
               "message": "untrusted input reaches flask.send_file() argument 'path_or_file'",
               "confidence": "high",
@@ -2587,44 +2475,16 @@
                   "guarded": false
                 }
               ],
-              "score": 33,
+              "score": 13,
               "reasons": [
-                "-30 the sink is in test, example or tooling code",
+                "-40 the sink is in test, example or tooling code",
                 "+10 data enters in a Flask view",
                 "+10 the view has no login decorator",
-                "-15 a plain URL parameter cannot contain \"/\"",
+                "-25 a plain URL parameter cannot contain \"/\"",
                 "+5 source and sink are in the same function",
                 "+3 reachable from 2 places"
               ],
               "key": "opendiamond:opendiamond/dataretriever/test_store.py:106:path-traversal",
-              "label": "unlabelled"
-            },
-            {
-              "rule": "path-traversal",
-              "file": "opendiamond/dataretriever/test_store.py",
-              "line": 233,
-              "message": "untrusted input reaches open() argument 'file'",
-              "confidence": "high",
-              "entries": [
-                {
-                  "function": "opendiamond.dataretriever.test_store.get_mixer_classes",
-                  "file": "opendiamond/dataretriever/test_store.py",
-                  "line": 67,
-                  "source": "route",
-                  "depth": 1,
-                  "route": true,
-                  "auth": "none",
-                  "guarded": false
-                }
-              ],
-              "score": 25,
-              "reasons": [
-                "-30 the sink is in test, example or tooling code",
-                "+10 data enters in a Flask view",
-                "+10 the view has no login decorator",
-                "-15 a plain URL parameter cannot contain \"/\""
-              ],
-              "key": "opendiamond:opendiamond/dataretriever/test_store.py:233:path-traversal",
               "label": "unlabelled"
             },
             {
@@ -2645,9 +2505,9 @@
                   "guarded": false
                 }
               ],
-              "score": 55,
+              "score": 45,
               "reasons": [
-                "-30 the sink is in test, example or tooling code",
+                "-40 the sink is in test, example or tooling code",
                 "+10 data enters in a Flask view",
                 "+10 the view has no login decorator",
                 "+10 a <path:...> URL parameter can contain \"/\"",
@@ -2667,7 +2527,7 @@
                   "function": "opendiamond.dataretriever.yfcc100m_mysql_store.get_object_src_http",
                   "file": "opendiamond/dataretriever/yfcc100m_mysql_store.py",
                   "line": 128,
-                  "source": "route-path",
+                  "source": "route",
                   "depth": 0,
                   "route": true,
                   "auth": "none",
@@ -2677,7 +2537,7 @@
                   "function": "opendiamond.dataretriever.yfcc100m_mysql_store.get_object_src_http",
                   "file": "opendiamond/dataretriever/yfcc100m_mysql_store.py",
                   "line": 128,
-                  "source": "route",
+                  "source": "route-path",
                   "depth": 0,
                   "route": true,
                   "auth": "none",
@@ -2842,12 +2702,13 @@
                 "source": "request",
                 "depth": 0,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               }
             ],
             "score": 55,
             "reasons": [
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+5 source and sink are in the same function"
             ],
             "key": "OnyxForum:modules/hub/hub/views.py:352:path-traversal",
@@ -2867,12 +2728,13 @@
                 "source": "request",
                 "depth": 0,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": true
               }
             ],
             "score": 35,
             "reasons": [
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+5 source and sink are in the same function",
               "-20 a validator-looking function is called on the way"
             ],
@@ -2893,12 +2755,13 @@
                 "source": "request",
                 "depth": 0,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               }
             ],
             "score": 55,
             "reasons": [
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+5 source and sink are in the same function"
             ],
             "key": "OnyxForum:modules/hub/hub/views.py:493:path-traversal",
@@ -2926,12 +2789,13 @@
                 "source": "request",
                 "depth": 0,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": false
               }
             ],
             "score": 55,
             "reasons": [
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+5 source and sink are in the same function"
             ]
           },
@@ -2949,12 +2813,13 @@
                 "source": "request",
                 "depth": 0,
                 "route": false,
-                "auth": "none",
+                "auth": "hook",
                 "guarded": true
               }
             ],
             "score": 35,
             "reasons": [
+              "+0 no login decorator, but the app has a before_request hook that may check",
               "+5 source and sink are in the same function",
               "-20 a validator-looking function is called on the way"
             ]
@@ -2986,12 +2851,13 @@
                   "source": "request",
                   "depth": 0,
                   "route": false,
-                  "auth": "none",
+                  "auth": "hook",
                   "guarded": false
                 }
               ],
               "score": 55,
               "reasons": [
+                "+0 no login decorator, but the app has a before_request hook that may check",
                 "+5 source and sink are in the same function"
               ],
               "key": "OnyxForum:modules/hub/hub/views.py:352:path-traversal",
@@ -3011,12 +2877,13 @@
                   "source": "request",
                   "depth": 0,
                   "route": false,
-                  "auth": "none",
+                  "auth": "hook",
                   "guarded": true
                 }
               ],
               "score": 35,
               "reasons": [
+                "+0 no login decorator, but the app has a before_request hook that may check",
                 "+5 source and sink are in the same function",
                 "-20 a validator-looking function is called on the way"
               ],
@@ -3037,12 +2904,13 @@
                   "source": "request",
                   "depth": 0,
                   "route": false,
-                  "auth": "none",
+                  "auth": "hook",
                   "guarded": false
                 }
               ],
               "score": 55,
               "reasons": [
+                "+0 no login decorator, but the app has a before_request hook that may check",
                 "+5 source and sink are in the same function"
               ],
               "key": "OnyxForum:modules/hub/hub/views.py:493:path-traversal",
@@ -3399,7 +3267,7 @@
                 "file": "services/orchest-webserver/app/app/views/orchest_api.py",
                 "line": 245,
                 "source": "request",
-                "depth": 3,
+                "depth": 2,
                 "route": true,
                 "auth": "none",
                 "guarded": false
@@ -5667,12 +5535,12 @@
                 "guarded": true
               }
             ],
-            "score": 10,
+            "score": 0,
             "reasons": [
               "-30 low confidence: the attacker's control over the value is partial",
               "+10 data enters in a Flask view",
               "+10 the view has no login decorator",
-              "-15 a plain URL parameter cannot contain \"/\"",
+              "-25 a plain URL parameter cannot contain \"/\"",
               "+5 source and sink are in the same function",
               "-20 a validator-looking function is called on the way"
             ]
@@ -5889,7 +5757,7 @@
                   "file": "services/orchest-webserver/app/app/views/orchest_api.py",
                   "line": 245,
                   "source": "request",
-                  "depth": 3,
+                  "depth": 2,
                   "route": true,
                   "auth": "none",
                   "guarded": false
@@ -7218,34 +7086,6 @@
           },
           {
             "rule": "path-traversal",
-            "file": "app/backend/task/api.py",
-            "line": 44,
-            "message": "untrusted input reaches open() argument 'file'",
-            "confidence": "high",
-            "entries": [
-              {
-                "function": "app.backend.task.api.get_log",
-                "file": "app/backend/task/api.py",
-                "line": 44,
-                "source": "route-path",
-                "depth": 0,
-                "route": true,
-                "auth": "none",
-                "guarded": false
-              }
-            ],
-            "score": 85,
-            "reasons": [
-              "+10 data enters in a Flask view",
-              "+10 the view has no login decorator",
-              "+10 a <path:...> URL parameter can contain \"/\"",
-              "+5 source and sink are in the same function"
-            ],
-            "key": "dls:app/backend/task/api.py:44:path-traversal",
-            "label": "unlabelled"
-          },
-          {
-            "rule": "path-traversal",
             "file": "app/backend/util/api.py",
             "line": 11,
             "message": "untrusted input reaches open() argument 'file'",
@@ -7291,12 +7131,12 @@
                 "guarded": false
               }
             ],
-            "score": 25,
+            "score": 15,
             "reasons": [
               "-30 low confidence: the attacker's control over the value is partial",
               "+10 data enters in a Flask view",
               "+10 the view has no login decorator",
-              "-15 a plain URL parameter cannot contain \"/\""
+              "-25 a plain URL parameter cannot contain \"/\""
             ]
           },
           {
@@ -7317,12 +7157,39 @@
                 "guarded": false
               }
             ],
-            "score": 25,
+            "score": 15,
             "reasons": [
               "-30 low confidence: the attacker's control over the value is partial",
               "+10 data enters in a Flask view",
               "+10 the view has no login decorator",
-              "-15 a plain URL parameter cannot contain \"/\""
+              "-25 a plain URL parameter cannot contain \"/\""
+            ]
+          },
+          {
+            "rule": "path-traversal",
+            "file": "app/backend/task/api.py",
+            "line": 44,
+            "message": "untrusted input reaches open() argument 'file'",
+            "confidence": "low",
+            "entries": [
+              {
+                "function": "app.backend.task.api.get_log",
+                "file": "app/backend/task/api.py",
+                "line": 44,
+                "source": "route-path",
+                "depth": 0,
+                "route": true,
+                "auth": "none",
+                "guarded": false
+              }
+            ],
+            "score": 55,
+            "reasons": [
+              "-30 low confidence: the attacker's control over the value is partial",
+              "+10 data enters in a Flask view",
+              "+10 the view has no login decorator",
+              "+10 a <path:...> URL parameter can contain \"/\"",
+              "+5 source and sink are in the same function"
             ]
           }
         ]
@@ -7482,34 +7349,6 @@
         },
         {
           "rule": "path-traversal",
-          "file": "app/backend/task/api.py",
-          "line": 44,
-          "message": "untrusted input reaches open() argument 'file'",
-          "confidence": "high",
-          "entries": [
-            {
-              "function": "app.backend.task.api.get_log",
-              "file": "app/backend/task/api.py",
-              "line": 44,
-              "source": "route-path",
-              "depth": 0,
-              "route": true,
-              "auth": "none",
-              "guarded": false
-            }
-          ],
-          "score": 85,
-          "reasons": [
-            "+10 data enters in a Flask view",
-            "+10 the view has no login decorator",
-            "+10 a <path:...> URL parameter can contain \"/\"",
-            "+5 source and sink are in the same function"
-          ],
-          "key": "dls:app/backend/task/api.py:44:path-traversal",
-          "label": "unlabelled"
-        },
-        {
-          "rule": "path-traversal",
           "file": "app/backend/util/api.py",
           "line": 11,
           "message": "untrusted input reaches open() argument 'file'",
@@ -7564,11 +7403,11 @@
                 "guarded": false
               }
             ],
-            "score": 45,
+            "score": 35,
             "reasons": [
               "+10 data enters in a Flask view",
               "-5 the view requires login",
-              "-15 a plain URL parameter cannot contain \"/\"",
+              "-25 a plain URL parameter cannot contain \"/\"",
               "+5 source and sink are in the same function"
             ],
             "key": "csm:csmserver/views/download_dashboard.py:141:path-traversal",
@@ -7592,11 +7431,11 @@
                 "guarded": false
               }
             ],
-            "score": 45,
+            "score": 35,
             "reasons": [
               "+10 data enters in a Flask view",
               "-5 the view requires login",
-              "-15 a plain URL parameter cannot contain \"/\"",
+              "-25 a plain URL parameter cannot contain \"/\"",
               "+5 source and sink are in the same function"
             ],
             "key": "csm:csmserver/views/download_dashboard.py:152:path-traversal",
@@ -7620,11 +7459,11 @@
                 "guarded": false
               }
             ],
-            "score": 45,
+            "score": 35,
             "reasons": [
               "+10 data enters in a Flask view",
               "-5 the view requires login",
-              "-15 a plain URL parameter cannot contain \"/\"",
+              "-25 a plain URL parameter cannot contain \"/\"",
               "+5 source and sink are in the same function"
             ],
             "key": "csm:csmserver/views/download_dashboard.py:157:path-traversal",
@@ -7758,12 +7597,12 @@
                 "guarded": false
               }
             ],
-            "score": 10,
+            "score": 0,
             "reasons": [
               "-30 low confidence: the attacker's control over the value is partial",
               "+10 data enters in a Flask view",
               "-5 the view requires login",
-              "-15 a plain URL parameter cannot contain \"/\""
+              "-25 a plain URL parameter cannot contain \"/\""
             ]
           },
           {
@@ -7834,12 +7673,12 @@
                 "guarded": false
               }
             ],
-            "score": 15,
+            "score": 5,
             "reasons": [
               "-30 low confidence: the attacker's control over the value is partial",
               "+10 data enters in a Flask view",
               "-5 the view requires login",
-              "-15 a plain URL parameter cannot contain \"/\"",
+              "-25 a plain URL parameter cannot contain \"/\"",
               "+5 source and sink are in the same function"
             ]
           },
@@ -8090,11 +7929,11 @@
               "guarded": false
             }
           ],
-          "score": 45,
+          "score": 35,
           "reasons": [
             "+10 data enters in a Flask view",
             "-5 the view requires login",
-            "-15 a plain URL parameter cannot contain \"/\"",
+            "-25 a plain URL parameter cannot contain \"/\"",
             "+5 source and sink are in the same function"
           ],
           "key": "csm:csmserver/views/download_dashboard.py:141:path-traversal",
@@ -8118,11 +7957,11 @@
               "guarded": false
             }
           ],
-          "score": 45,
+          "score": 35,
           "reasons": [
             "+10 data enters in a Flask view",
             "-5 the view requires login",
-            "-15 a plain URL parameter cannot contain \"/\"",
+            "-25 a plain URL parameter cannot contain \"/\"",
             "+5 source and sink are in the same function"
           ],
           "key": "csm:csmserver/views/download_dashboard.py:152:path-traversal",
@@ -8146,11 +7985,11 @@
               "guarded": false
             }
           ],
-          "score": 45,
+          "score": 35,
           "reasons": [
             "+10 data enters in a Flask view",
             "-5 the view requires login",
-            "-15 a plain URL parameter cannot contain \"/\"",
+            "-25 a plain URL parameter cannot contain \"/\"",
             "+5 source and sink are in the same function"
           ],
           "key": "csm:csmserver/views/download_dashboard.py:157:path-traversal",

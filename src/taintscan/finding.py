@@ -24,7 +24,9 @@ class Entry:
     source: str  # FROM_REQUEST, FROM_PATH_PARAM or FROM_URL_PARAM
     depth: int = 0  # calls between that function and the sink
     route: bool = False  # the function is a Flask view
-    auth: str = "none"  # "none", "login" or "admin", judged from decorator names
+    # "none", "login" or "admin", judged from decorator names; "hook" when
+    # there is no decorator but the app has a before_request hook.
+    auth: str = "none"
     guarded: bool = False  # a validator-looking function is called along the way
 
 

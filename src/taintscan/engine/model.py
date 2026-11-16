@@ -33,6 +33,19 @@ NOT_SAFETY_NAME = re.compile(r"load|dump|substitute|eval|mark_safe|safe_str|safe
 TEST_CODE = re.compile(r"(^|[\\/])(tests?|testing)[\\/]|(^|[\\/])test_[^\\/]*$|_test\.py$|conftest\.py$")
 
 
+PATH_RESOLVERS = {"realpath", "abspath", "normpath", "resolve"}
+
+
+def _rejects(statement: ast.stmt) -> bool:
+    """True for `raise ...`, `return` and `return None`."""
+    if isinstance(statement, ast.Raise):
+        return True
+    if isinstance(statement, ast.Return):
+        value = statement.value
+        return value is None or (isinstance(value, ast.Constant) and value.value is None)
+    return False
+
+
 def claims_safety(name: str) -> bool:
     return bool(SAFETY_NAME.search(name)) and not NOT_SAFETY_NAME.search(name)
 
@@ -103,14 +116,26 @@ class Function:
     module: Module
     owner: str | None = None  # dotted name of the class, if this is a method
     summary: Summary = field(default_factory=Summary)
+    parent: int | None = None  # id() of the enclosing function's node, if nested
 
     @cached_property
     def guarded(self) -> bool:
-        """True if the body calls something whose name looks like a validator."""
-        return any(
-            isinstance(node, ast.Call) and VALIDATOR_NAME.search(_last_name(node))
-            for node in ast.walk(self.node)
+        """True if the body looks like it validates something. Ranking only.
+
+        Either it calls something whose name looks like a validator, or it
+        has the shape of one: it resolves a path and has an `if` that
+        rejects (raises, or returns nothing).
+        """
+        nodes = list(ast.walk(self.node))
+        called = [_last_name(node) for node in nodes if isinstance(node, ast.Call)]
+        if any(VALIDATOR_NAME.search(name) for name in called):
+            return True
+        resolves = any(name in PATH_RESOLVERS for name in called)
+        rejects = any(
+            isinstance(node, ast.If) and any(_rejects(statement) for statement in node.body)
+            for node in nodes
         )
+        return resolves and rejects
 
     @cached_property
     def auth(self) -> str:

@@ -11,6 +11,7 @@ taintscan top                           show the stored findings, most likely re
 import argparse
 import json
 import sys
+import tomllib
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -151,10 +152,22 @@ def ranked_findings(store) -> list[dict]:
     return sorted(rows, key=lambda row: (-row["score"], row["repo"], row["file"], row["line"]))
 
 
+def load_verdicts(data: Path) -> dict[str, str]:
+    """Triage verdicts from <data>/labels.toml: "repo:file:line:rule" -> verdict.
+
+    The file is private (the data directory is git-ignored): it names
+    possible vulnerabilities in other people's projects.
+    """
+    labels = data / "labels.toml"
+    return tomllib.loads(labels.read_text(encoding="utf-8")) if labels.exists() else {}
+
+
 def run_top(args) -> int:
     from taintscan.storage import Store
 
     store = Store(args.data / "taintscan.db")
+    verdicts = load_verdicts(args.data)
+    tally: dict[str, int] = {}
     shown: dict[str, int] = {}
     printed = 0
     for row in ranked_findings(store):
@@ -164,7 +177,9 @@ def run_top(args) -> int:
             continue  # do not let one repository fill the list
         shown[row["repo"]] = shown.get(row["repo"], 0) + 1
         printed += 1
-        print(f"{printed:>3}. [{row['score']}] {row['repo']}  {row['rule']}")
+        verdict = verdicts.get(f"{row['repo']}:{row['file']}:{row['line']}:{row['rule']}", "not triaged")
+        tally[verdict] = tally.get(verdict, 0) + 1
+        print(f"{printed:>3}. [{row['score']}] {row['repo']}  {row['rule']}  ({verdict})")
         print(f"     {row['file']}:{row['line']}  {row['message']}")
         for entry in row["entries"][:3]:
             print(
@@ -178,6 +193,10 @@ def run_top(args) -> int:
             break
     if not printed:
         print("no findings stored yet; run `taintscan collect` and `taintscan scan-all` first")
+    elif verdicts:
+        order = ["real", "plausible", "unsure", "fp", "not triaged"]
+        parts = [f"{tally[v]} {v}" for v in order if tally.get(v)]
+        print(f"\nof the {printed} shown: " + ", ".join(parts))
     return 0
 
 
