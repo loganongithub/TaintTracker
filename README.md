@@ -59,4 +59,4 @@ The benchmark clones the repositories listed in `benchmarks/cves.toml` into `ben
 
 `taintscan top` shows the ranked findings with a verdict next to each. Verdicts are kept in `data/labels.toml`, keyed `"owner/repo:file:line:rule"`, with one of `real`, `plausible`, `unsure` or `fp`. That file is git-ignored and must stay private: it names possible vulnerabilities that have not been disclosed.
 
-Proofs of concept run only against local copies, never a live deployment.
+Proofs of concept run only against local copies, never a live deployment. `disclosure/` holds the responsible-disclosure process and a report template; filled reports and PoC kits for specific findings stay private (git-ignored), since they describe unfixed bugs in other people's projects.
