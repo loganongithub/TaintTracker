@@ -9,6 +9,7 @@ sent to api.github.com.
 
 import json
 import os
+import subprocess
 import time
 import urllib.error
 import urllib.parse
@@ -18,6 +19,29 @@ from collections.abc import Iterator
 API = "https://api.github.com/search/repositories"
 PAGE_SIZE = 100
 MAX_RESULTS = 1000  # GitHub never returns more than this for one query
+
+# GitHub caps one query at 1000 results, so to collect more we sweep across
+# star ranges and union the results (the store ignores duplicates). The bands
+# are narrow where repositories are dense (few stars) and wide where they are
+# sparse (many stars), to stay under 1000 per band.
+STAR_BANDS = [
+    (5, 6), (7, 8), (9, 10), (11, 13), (14, 17), (18, 22), (23, 29), (30, 39),
+    (40, 54), (55, 79), (80, 119), (120, 199), (200, 399), (400, 899), (900, 3000),
+]
+
+
+def _token() -> str | None:
+    """A GitHub token: the env var, or the one `gh` is logged in with."""
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        return token
+    try:
+        result = subprocess.run(
+            ["gh", "auth", "token"], capture_output=True, text=True, timeout=10
+        )
+        return result.stdout.strip() or None
+    except (OSError, subprocess.SubprocessError):
+        return None
 
 
 def build_query(
@@ -52,7 +76,7 @@ def fetch_page(query: str, page: int, sort: str) -> dict:
     request = urllib.request.Request(f"{API}?{params}")
     request.add_header("Accept", "application/vnd.github+json")
     request.add_header("User-Agent", "taintscan")
-    token = os.environ.get("GITHUB_TOKEN")
+    token = _token()
     if token:
         request.add_header("Authorization", f"Bearer {token}")
     for attempt in range(3):
@@ -80,3 +104,18 @@ def search(query: str, limit: int, sort: str = "updated") -> Iterator[dict]:
         if len(items) < PAGE_SIZE:
             return
         time.sleep(2)  # stay well under the search rate limit
+
+
+def sweep(
+    pushed_after: str, max_size_kb: int, keyword: str = "flask", min_stars: int = 5
+) -> Iterator[dict]:
+    """Yield repositories across every star band, widest reach GitHub allows.
+
+    Duplicates between bands are expected (a repo's star count sits in one band,
+    so in practice there are few); the caller's store ignores them.
+    """
+    for low, high in STAR_BANDS:
+        if high < min_stars:
+            continue
+        query = build_query(max(low, min_stars), high, pushed_after, max_size_kb, keyword)
+        yield from search(query, MAX_RESULTS, sort="updated")

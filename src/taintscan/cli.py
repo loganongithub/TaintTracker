@@ -40,6 +40,10 @@ def build_parser() -> argparse.ArgumentParser:
     collect.add_argument("--pushed-after", default=two_years_ago, help="YYYY-MM-DD")
     collect.add_argument("--max-size-mb", type=int, default=50)
     collect.add_argument("--dry-run", action="store_true", help="list matches without saving")
+    collect.add_argument(
+        "--wide", action="store_true",
+        help="sweep every star band to gather thousands (ignores --max-stars)",
+    )
 
     scan_all = commands.add_parser("scan-all", help="clone and scan collected repositories")
     scan_all.add_argument("--limit", type=int, help="stop after this many repositories")
@@ -96,22 +100,31 @@ def run_collect(args) -> int:
     from taintscan import collect
     from taintscan.storage import Store
 
-    query = collect.build_query(
-        args.min_stars, args.max_stars, args.pushed_after, args.max_size_mb * 1000
-    )
-    print(f"query: {query}")
+    max_size_kb = args.max_size_mb * 1000
+    if args.wide:
+        print(f"sweeping star bands >= {args.min_stars}, pushed >= {args.pushed_after}, "
+              f"<= {args.max_size_mb} MB")
+        repos = collect.sweep(args.pushed_after, max_size_kb, min_stars=args.min_stars)
+    else:
+        query = collect.build_query(args.min_stars, args.max_stars, args.pushed_after, max_size_kb)
+        print(f"query: {query}")
+        # Ask for extra results, because some will already be in the database.
+        repos = collect.search(query, limit=args.limit * 3)
+
     store = None if args.dry_run else Store(args.data / "taintscan.db")
+    seen: set[str] = set()  # for the dry-run distinct count across bands
     added = total_kb = 0
-    # Ask for extra results, because some will already be in the database.
-    for repo in collect.search(query, limit=args.limit * 3):
-        if store is None or store.add_repo(repo):
+    for repo in repos:
+        is_new = repo["full_name"] not in seen if store is None else store.add_repo(repo)
+        seen.add(repo["full_name"])
+        if is_new:
             added += 1
             total_kb += repo["size_kb"]
-            if args.dry_run:
+            if args.dry_run and added <= 10:
                 print(f"  {repo['full_name']}  {repo['stars']} stars  {repo['size_kb']} KB")
         if added >= args.limit:
             break
-    verb = "matched" if args.dry_run else "added"
+    verb = "would add" if args.dry_run else "added"
     print(f"{verb} {added} repositories, {total_kb / 1000:.0f} MB in total on GitHub")
     return 0
 

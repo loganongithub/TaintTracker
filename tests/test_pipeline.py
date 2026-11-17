@@ -102,3 +102,31 @@ def test_scan_all_clones_scans_and_records(tmp_path):
     assert len(findings[0]["commit_sha"]) == 40
     assert not any((tmp_path / "data" / "clones").iterdir())  # clones are removed afterwards
     store.close()
+
+
+def test_star_bands_are_ascending_and_cover_a_wide_range():
+    from taintscan import collect
+
+    lows = [low for low, _ in collect.STAR_BANDS]
+    assert lows == sorted(lows)
+    for (_, high), (next_low, _) in zip(collect.STAR_BANDS, collect.STAR_BANDS[1:]):
+        assert next_low == high + 1  # contiguous, no gaps or overlaps
+    assert collect.STAR_BANDS[0][0] <= 5
+    assert collect.STAR_BANDS[-1][1] >= 3000
+
+
+def test_sweep_queries_each_band_and_skips_bands_below_min(monkeypatch):
+    from taintscan import collect
+
+    seen_queries = []
+
+    def fake_search(query, limit, sort="updated"):
+        seen_queries.append(query)
+        return iter([{"full_name": f"r/{len(seen_queries)}"}])
+
+    monkeypatch.setattr(collect, "search", fake_search)
+    list(collect.sweep("2024-01-01", 50000, min_stars=100))
+    # Every query must ask for at least 100 stars; low bands are skipped.
+    assert seen_queries
+    assert all("stars:" in q for q in seen_queries)
+    assert not any("stars:5.." in q for q in seen_queries)
